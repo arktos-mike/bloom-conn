@@ -1,0 +1,348 @@
+import { Card, Col, Form, notification, Row, Segmented, Skeleton } from 'antd';
+import React, { useEffect, useState } from 'react'
+import { useTranslation } from 'react-i18next';
+import { ApiOutlined } from '@ant-design/icons';
+import { Button, InputNumber, Checkbox, Input, Select } from '../components';
+
+const cardStyle = { background: "whitesmoke", width: '100%', display: 'flex', flexDirection: 'column' as 'column' }
+const cardStyle2 = { background: "whitesmoke", width: '100%', display: 'flex', flexDirection: 'column' as 'column', marginBottom: 8, height: '100%' }
+const cardHeadStyle = { background: "#1890ff", color: "white" }
+const cardBodyStyle = { flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column' as 'column' }
+
+type Props = {
+  token: any;
+};
+
+const SettingsDev: React.FC<Props> = ({
+  token,
+}) => {
+  const { t, i18n } = useTranslation();
+
+  let isSubscribed = true;
+
+  const [formCOM] = Form.useForm()
+  const [formRTU] = Form.useForm()
+  const [formTCP] = Form.useForm()
+  const [opCOM, setOpCOM] = useState({ path: '', scan: 0, timeout: 0, conf: { baudRate: 0, dataBits: 0, stopBits: 0, parity: '' } })
+  const [com, setCom] = useState('opCOM1')
+  const [conn, setConn] = useState('')
+  const [rtu, setRtu] = useState({ com: '', sId: 0, swapBytes: true, swapWords: true })
+  const [tcp, setTcp] = useState({ ip: '', port: 0, sId: 0, swapBytes: true, swapWords: true })
+  const [loading, setLoading] = useState(true)
+
+  const openNotificationWithIcon = (type: string, message: string, dur: number, descr?: string, style?: React.CSSProperties) => {
+    if (type == 'success' || type == 'warning' || type == 'info' || type == 'error')
+      notification[type]({
+        message: message,
+        description: descr,
+        placement: 'bottomRight',
+        duration: dur,
+        style: style,
+      });
+  }
+
+  const fetchConn = async () => {
+    try {
+      const response = await fetch('http://localhost:3000/config');
+      if (!response.ok) { throw Error(response.statusText); }
+      const json = await response.json();
+      setConn(json['connConf']['conn']);
+    }
+    catch (error) { console.log(error); }
+  }
+
+  const fetchCOM = async () => {
+    try {
+      const response = await fetch('http://localhost:3000/config');
+      if (!response.ok) { throw Error(response.statusText); }
+      const json = await response.json();
+      if (isSubscribed) setOpCOM(json['comConf'][com]);
+    }
+    catch (error) { console.log(error); }
+  }
+
+  const fetchRTU = async () => {
+    try {
+      const response = await fetch('http://localhost:3000/config');
+      if (!response.ok) { throw Error(response.statusText); }
+      const json = await response.json();
+      if (isSubscribed) { setRtu(json['rtuConf']['rtu1']); };
+    }
+    catch (error) { console.log(error); }
+  }
+
+  const fetchTCP = async () => {
+    try {
+      const response = await fetch('http://localhost:3000/config');
+      if (!response.ok) { throw Error(response.statusText); }
+      const json = await response.json();
+      if (isSubscribed) setTcp(json['ipConf']['tcp1']); setLoading(false);
+    }
+    catch (error) { console.log(error); }
+  }
+
+  const onConnChange = async (conf: any) => {
+    if (conf != '') {
+      try {
+        const response = await fetch('http://localhost:3000/config/update', {
+          method: 'POST',
+          headers: { 'content-type': 'application/json;charset=UTF-8', },
+          body: JSON.stringify({ conn: conf }),
+        });
+        const json = await response.json();
+        openNotificationWithIcon(json.error ? 'warning' : 'success', t(json.message), 3, '', json.error ? { backgroundColor: '#fffbe6', border: '2px solid #ffe58f' } : { backgroundColor: '#f6ffed', border: '2px solid #b7eb8f' });
+        if (!response.ok) { throw Error(response.statusText); }
+        fetchConn();
+      }
+      catch (error) { console.log(error) }
+    }
+  }
+
+  const onCOMChange = async (values: { path: any; scan: any; timeout: any; baudRate: any; dataBits: any; stopBits: any; parity: any; }) => {
+    try {
+      const response = await fetch('http://localhost:3000/config/update', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json;charset=UTF-8', },
+        body: JSON.stringify({ [com]: { path: values.path, scan: values.scan, timeout: values.timeout, conf: { baudRate: values.baudRate, dataBits: values.dataBits, stopBits: values.stopBits, parity: values.parity } } }),
+      });
+      const json = await response.json();
+      openNotificationWithIcon(json.error ? 'warning' : 'success', t(json.message), 3, '', json.error ? { backgroundColor: '#fffbe6', border: '2px solid #ffe58f' } : { backgroundColor: '#f6ffed', border: '2px solid #b7eb8f' });
+      if (!response.ok) { throw Error(response.statusText); }
+      fetchCOM();
+    }
+    catch (error) { console.log(error) }
+  }
+
+  const onRTUChange = async (values: { com: any; sId: any; swapBytes: any; swapWords: any; }) => {
+    try {
+      const response = await fetch('http://localhost:3000/config/update', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json;charset=UTF-8', },
+        body: JSON.stringify({ rtu1: { com: values.com, sId: values.sId, swapBytes: values.swapBytes, swapWords: values.swapWords, } }),
+      });
+      const json = await response.json();
+      openNotificationWithIcon(json.error ? 'warning' : 'success', t(json.message), 3, '', json.error ? { backgroundColor: '#fffbe6', border: '2px solid #ffe58f' } : { backgroundColor: '#f6ffed', border: '2px solid #b7eb8f' });
+      if (!response.ok) { throw Error(response.statusText); }
+      fetchRTU();
+    }
+    catch (error) { console.log(error) }
+  }
+
+  const onTCPChange = async (values: { ip: any; port: any; sId: any; swapBytes: any; swapWords: any; }) => {
+    try {
+      const response = await fetch('http://localhost:3000/config/update', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json;charset=UTF-8', },
+        body: JSON.stringify({ tcp1: { ip: values.ip, port: values.port, sId: values.sId, swapBytes: values.swapBytes, swapWords: values.swapWords, } }),
+      });
+      const json = await response.json();
+      openNotificationWithIcon(json.error ? 'warning' : 'success', t(json.message), 3, '', json.error ? { backgroundColor: '#fffbe6', border: '2px solid #ffe58f' } : { backgroundColor: '#f6ffed', border: '2px solid #b7eb8f' });
+      if (!response.ok) { throw Error(response.statusText); }
+      fetchTCP();
+    }
+    catch (error) { console.log(error) }
+  }
+  useEffect(() => {
+    fetchCOM();
+    return () => { isSubscribed = false }
+  }, [com])
+
+  useEffect(() => {
+    if (formCOM) {
+      formCOM.setFieldsValue({ path: opCOM.path, scan: opCOM.scan, timeout: opCOM.timeout, baudRate: opCOM.conf.baudRate, dataBits: opCOM.conf.dataBits, stopBits: opCOM.conf.stopBits, parity: opCOM.conf.parity })
+    }
+  }, [opCOM])
+
+  useEffect(() => {
+    if (formRTU) {
+      formRTU.setFieldsValue({ com: rtu.com, sId: rtu.sId, swapBytes: rtu.swapBytes, swapWords: rtu.swapWords })
+    }
+  }, [rtu])
+
+  useEffect(() => {
+    if (formTCP) {
+      formTCP.setFieldsValue({ ip: tcp.ip, port: tcp.port, sId: tcp.sId, swapBytes: tcp.swapBytes, swapWords: tcp.swapWords })
+    }
+  }, [tcp])
+
+  useEffect(() => {
+    fetchConn();
+    fetchRTU();
+    fetchTCP();
+    return () => { isSubscribed = false }
+  }, [])
+
+  return (
+    <div className='wrapper'>
+      <Row gutter={[8, 8]} style={{ flex: '1 1 100%', alignSelf: 'stretch', alignItems: 'stretch', display: 'flex' }}>
+        <Col span={12} style={{ display: 'flex', alignItems: 'stretch', alignSelf: 'stretch' }}>
+          <Card title={t('panel.com')} extra={<Segmented size='middle' value={com} onChange={(value) => { setCom(value.toString()) }} options={[{ label: 'COM1', value: 'opCOM1', icon: <ApiOutlined />, },
+          { label: 'COM2', value: 'opCOM2', icon: <ApiOutlined />, },]}
+          />} bordered={false} size='small' style={cardStyle} headStyle={cardHeadStyle} bodyStyle={cardBodyStyle}>
+            <Skeleton loading={loading} round active>
+              <Form
+                labelCol={{ span: 8 }}
+                wrapperCol={{ span: 16 }}
+                size='large'
+                form={formCOM}
+                style={{ width: '100%' }}
+                onFinish={onCOMChange}
+                preserve={false}
+                colon={false}
+              >
+                <Form.Item
+                  name="path"
+                  label={t('com.path')}
+                  rules={[{ required: true, message: t('user.fill') }]}
+                >
+                  <Input className="narrow" userRights={['admin', 'manager']} token={token} placeholder='com.path' onChange={(e: any) => { }} onFocus={(e: any) => { }} />
+                </Form.Item>
+                <Form.Item
+                  name="scan"
+                  label={t('com.scan')}
+                  rules={[{ required: true, message: t('user.fill') }]}
+                >
+                  <InputNumber className="narrow" eng tag={{ name: 'comTime' }} userRights={['admin', 'manager']} token={token} placeholder='com.scan' controls={false} onChange={(value: any) => { }} onFocus={(e: any) => { }} />
+                </Form.Item>
+                <Form.Item
+                  name="timeout"
+                  label={t('com.timeout')}
+                  rules={[{ required: true, message: t('user.fill') }]}
+                >
+                  <InputNumber className="narrow" eng tag={{ name: 'comTime' }} userRights={['admin', 'manager']} token={token} placeholder='com.timeout' controls={false} onChange={(value: any) => { }} onFocus={(e: any) => { }} />
+                </Form.Item>
+                <Form.Item
+                  name="baudRate"
+                  label={t('com.baudRate')}
+                  rules={[{ required: true, message: t('user.fill') }]}
+                >
+                  <Select userRights={['admin', 'manager']} token={token} options={[{ label: 9600, value: 9600 }, { label: 19200, value: 19200 }, { label: 38400, value: 38400 }, { label: 57600, value: 57600 }, { label: 115200, value: 115200 }, { label: 230400, value: 230400 },]
+                  }>
+                  </Select>
+                </Form.Item>
+                <Form.Item
+                  name="dataBits"
+                  label={t('com.dataBits')}
+                  rules={[{ required: true, message: t('user.fill') }]}
+                >
+                  <Select userRights={['admin', 'manager']} token={token} options={[{ label: 5, value: 5 }, { label: 6, value: 6 }, { label: 7, value: 7 }, { label: 8, value: 8 }]} />
+                </Form.Item>
+                <Form.Item
+                  name="stopBits"
+                  label={t('com.stopBits')}
+                  rules={[{ required: true, message: t('user.fill') }]}
+                >
+                  <Select userRights={['admin', 'manager']} token={token} options={[{ label: 1, value: 1 }, { label: 1.5, value: 1.5 }, { label: 2, value: 2 }]} />
+                </Form.Item>
+                <Form.Item
+                  name="parity"
+                  label={t('com.parity.parity')}
+                  rules={[{ required: true, message: t('user.fill') }]}
+                >
+                  <Select userRights={['admin', 'manager']} token={token} options={[{ label: t('com.parity.none'), value: "none" }, { label: t('com.parity.even'), value: "even" }, { label: t('com.parity.mark'), value: "mark" }, { label: t('com.parity.odd'), value: "odd" }, { label: t('com.parity.space'), value: "space" }]} />
+                </Form.Item>
+                <Form.Item wrapperCol={{ offset: 8, span: 16 }}>
+                  <Button userRights={['admin', 'manager']} token={token} htmlType="submit" text="user.submit" />
+                </Form.Item>
+              </Form>
+            </Skeleton>
+          </Card>
+        </Col>
+        <Col span={12} style={{ display: 'flex', flex: '1 1 100%', flexDirection: 'column', alignItems: 'stretch', alignSelf: 'stretch' }}>
+          <Card title={t('panel.rtu')} bordered={false} size='small' style={cardStyle2} headStyle={cardHeadStyle} bodyStyle={cardBodyStyle} extra={<Segmented disabled={['admin'].includes(JSON.parse(Buffer.from(token.split('.')[1], 'base64').toString()).role) ? false : true} size='middle' value={conn} onChange={(value) => { onConnChange(value.toString()) }} options={[{ label: 'TCP', value: 'ip', icon: <ApiOutlined />, },
+          { label: 'RTU', value: 'com', icon: <ApiOutlined />, },]}
+          />}>
+            <Skeleton loading={loading} round active>
+              <Form
+                size='small'
+                form={formRTU}
+                style={{ width: '100%' }}
+                onFinish={onRTUChange}
+                preserve={false}
+                colon={false}
+              >
+                <Form.Item label=" " >
+                  <Form.Item
+                    name="com"
+                    label={t('rtu.com')}
+                    style={{ display: 'inline-block', width: 'calc(50% - 8px)' }}
+                    rules={[{ required: true, message: t('user.fill') }]}
+                  >
+                    <Select userRights={['admin', 'manager']} token={token} options={[{ label: "COM1", value: "opCOM1" }, { label: "COM2", value: "opCOM2" }]} />
+                  </Form.Item>
+                  <Form.Item
+                    name="sId"
+                    label={t('rtu.sId')}
+                    style={{ display: 'inline-block', width: 'calc(50%)', marginLeft: 8 }}
+                    rules={[{ required: true, message: t('user.fill') }]}
+                  >
+                    <InputNumber className="narrow" userRights={['admin', 'manager']} token={token} placeholder='rtu.sId' style={{ width: '100%' }} controls={false} onChange={(value: any) => { }} onFocus={(e: any) => { }} />
+                  </Form.Item>
+                </Form.Item>
+                <Form.Item label=" " style={{ marginTop: 10 }} wrapperCol={{ offset: 4, span: 20 }}>
+                  <Form.Item name="swapBytes" style={{ display: 'inline-block', width: 'calc(50% - 8px)' }} valuePropName="checked" >
+                    <Checkbox userRights={['admin', 'manager']} token={token} text='rtu.swapBytes' ></Checkbox>
+                  </Form.Item>
+                  <Form.Item name="swapWords" style={{ display: 'inline-block', width: 'calc(50% - 8px)', margin: '0 8px' }} valuePropName="checked" >
+                    <Checkbox userRights={['admin', 'manager']} token={token} text='rtu.swapWords'></Checkbox>
+                  </Form.Item>
+                </Form.Item>
+                <Form.Item wrapperCol={{ offset: 8, span: 16 }} style={{ marginTop: 20 }}>
+                  <Button userRights={['admin', 'manager']} token={token} htmlType="submit" text="user.submit" />
+                </Form.Item>
+              </Form>
+            </Skeleton>
+          </Card>
+          <Card title={t('panel.tcp')} bordered={false} size='small' style={cardStyle} headStyle={cardHeadStyle} bodyStyle={cardBodyStyle} extra={<Segmented disabled={['admin'].includes(JSON.parse(Buffer.from(token.split('.')[1], 'base64').toString()).role) ? false : true} size='middle' value={conn} onChange={(value) => { onConnChange(value.toString()) }} options={[{ label: 'TCP', value: 'ip', icon: <ApiOutlined />, },
+          { label: 'RTU', value: 'com', icon: <ApiOutlined />, },]}
+          />}>
+            <Skeleton loading={loading} round active>
+              <Form
+                labelCol={{ span: 6 }}
+                wrapperCol={{ span: 18 }}
+                size='small'
+                form={formTCP}
+                style={{ width: '100%' }}
+                onFinish={onTCPChange}
+                preserve={false}
+                colon={false}
+              >
+                <Form.Item
+                  label={t('tcp.address')}
+                  required={true}
+                >
+                  <Form.Item name="ip" rules={[{ required: true, message: t('user.fill') }]} style={{ display: 'inline-block', width: 'calc(70% - 8px)' }} >
+                    <InputNumber className="narrow" userRights={['admin', 'manager']} token={token} placeholder='tcp.ip' controls={false} onChange={(value: any) => { }} onFocus={(e: any) => { }} />
+                  </Form.Item>
+                  <Form.Item name="port" rules={[{ required: true, message: t('user.fill') }]} style={{ display: 'inline-block', width: 'calc(30% )', marginLeft: '8px' }} >
+                    <InputNumber className="narrow" userRights={['admin', 'manager']} token={token} placeholder='tcp.port' controls={false} onChange={(value: any) => { }} onFocus={(e: any) => { }} />
+                  </Form.Item>
+                </Form.Item>
+                <Form.Item
+                  name="sId"
+                  label={t('rtu.sId')}
+                  rules={[{ required: true, message: t('user.fill') }]}
+                >
+                  <InputNumber className="narrow" userRights={['admin', 'manager']} token={token} placeholder='rtu.sId' controls={false} onChange={(value: any) => { }} onFocus={(e: any) => { }} />
+                </Form.Item>
+                <Form.Item label=" " style={{ marginTop: 10 }}>
+                  <Form.Item name="swapBytes" style={{ display: 'inline-block', width: 'calc(50% - 8px)' }} valuePropName="checked" >
+                    <Checkbox userRights={['admin', 'manager']} token={token} text='rtu.swapBytes' ></Checkbox>
+                  </Form.Item>
+                  <Form.Item name="swapWords" style={{ display: 'inline-block', width: 'calc(50% - 8px)', margin: '0 8px' }} valuePropName="checked" >
+                    <Checkbox userRights={['admin', 'manager']} token={token} text='rtu.swapWords'></Checkbox>
+                  </Form.Item>
+                </Form.Item>
+                <Form.Item wrapperCol={{ offset: 8, span: 16 }} style={{ marginTop: 20 }}>
+                  <Button userRights={['admin', 'manager']} token={token} htmlType="submit" text="user.submit" />
+                </Form.Item>
+              </Form>
+            </Skeleton>
+          </Card>
+        </Col>
+      </Row>
+    </div>
+  )
+}
+
+export default SettingsDev
