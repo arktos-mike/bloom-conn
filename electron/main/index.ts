@@ -8,18 +8,19 @@ import eslocale from './eslocale'
 const Store = require('electron-store');
 const store = new Store();
 
-
 const init = async () => {
   const locales = [{locale:'en',translation:enlocale}, {locale:'es',translation:eslocale}, {locale:'ru',translation:rulocale},{locale:'tr',translation: trlocale}];
 
-  let mobj, obj
+  let mobj, obj, lngs
   let locale
   mobj = {}
+  lngs = []
   for (let row of locales) {
     obj = {}
     for (let prop in row) {
       if (prop == 'locale') {
         locale = row[prop]
+        lngs.push(row[prop])
         mobj = Object.assign(mobj, { [locale]: {} })
       }
       else if (prop == 'translation') {
@@ -28,10 +29,9 @@ const init = async () => {
     }
     mobj[locale] = obj
   }
-
+  store.set('lngs', lngs);
   store.set('locales', mobj);
   store.set('lng', 'ru');
-
 }
 init();
 // Disable GPU Acceleration for Windows 7
@@ -62,7 +62,7 @@ const indexHtml = join(ROOT_PATH.dist, 'index.html')
 async function createWindow() {
   win = new BrowserWindow({
     title: 'Main window',
-    icon: join(ROOT_PATH.public, 'favicon.svg'),
+    icon: join(ROOT_PATH.public, 'icon.ico'),
     fullscreen: true,
     autoHideMenuBar: true,
     webPreferences: {

@@ -51,11 +51,11 @@ interface ShiftDataType {
 }
 
 type Props = {
-  token: any;
+
 };
 
 const MonthReport: React.FC<Props> = ({
-  token
+
 }
 ) => {
   const { t, i18n } = useTranslation();
@@ -452,7 +452,7 @@ const MonthReport: React.FC<Props> = ({
     fetchUsers();
   }, []);
 
-  useEffect(()=>{
+  useEffect(() => {
     dayjs.locale(i18n.language)
   }, [i18n.language])
 
@@ -613,7 +613,7 @@ const MonthReport: React.FC<Props> = ({
     <div ref={div} className='wrapper'>
       <div style={{ display: 'inline-flex', width: '100%', alignItems: 'center', justifyContent: 'center' }}><h1 style={{ margin: 10 }}>{t('log.select')}</h1>
         <DatePicker style={{ flexGrow: 1 }} picker="month" format='MMMM YYYY' defaultValue={dayjs()} onChange={(e: any) => { setPeriod([e ? e?.startOf('month') : dayjs().startOf('month'), e ? e?.endOf('month') : dayjs()]) }} />
-        {false && <Button userRights={['admin', 'manager']} token={token} shape="circle" icon={<DeleteOutlined />} size="large" type="primary" style={{ margin: 10 }} onClick={confirm} ></Button>}
+        {false && <Button shape="circle" icon={<DeleteOutlined />} size="large" type="primary" style={{ margin: 10 }} onClick={confirm} ></Button>}
       </div>
       <Tabs size='small' type='card' animated={{ inkBar: true, tabPane: true }} items={items} />
     </div>

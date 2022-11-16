@@ -5,6 +5,8 @@ import { useTranslation } from 'react-i18next';
 import UserEdit from "./UserEdit";
 import UserRegister from "./UserRegister";
 
+const Store = require('electron-store');
+const store = new Store();
 const { Option } = Select;
 
 type Props = {
@@ -25,20 +27,10 @@ const UserLogin: React.FC<Props> = ({
 
   const [form] = Form.useForm()
   const [state, setState] = useState({ data: [] })
-  const [search, setSearch] = useState('')
   const [editVisible, setEditVisible] = useState(false)
-  const [selected, setSelected] = useState(false)
-  const [showList, setShowList] = useState(false)
-  const [listNotEmpty, setListNotEmpty] = useState(false)
   const [regVisible, setRegVisible] = useState(false)
   const fetchData = async () => {
-    try {
-      const response = await fetch('http://localhost:3000/users/names');
-      if (!response.ok) { throw Error(response.statusText); }
-      const json = await response.json();
-      setState({ data: json });
-    }
-    catch (error) { console.log(error); }
+    setState({ data: (store.get('users')).map((user: any) => { return user.name }).sort() });
   }
 
   useEffect(() => {
@@ -63,27 +55,7 @@ const UserLogin: React.FC<Props> = ({
   }
   const handleOk = async () => {
     form.resetFields();
-    try {
-      const res = await fetch('http://localhost:3000/users/logout', {
-        method: 'POST',
-        headers: { 'content-type': 'application/json;charset=UTF-8', },
-        body: JSON.stringify({ id: JSON.parse(Buffer.from(token.split('.')[1], 'base64').toString()).id, logoutby: 'button' }),
-      });
-      if (!res.ok) { throw Error(res.statusText); }
-      const ans = await fetch('http://localhost:3000/logs/user');
-      const json = await ans.json();
-      if (!ans.ok) { throw Error(ans.statusText); }
-      if (json.length) {
-        const response = await fetch('http://localhost:3000/users/login/' + json[0].id, {
-          method: 'POST'
-        });
-        const jsonb = await response.json();
-        setToken(jsonb.token || null);
-        if (!response.ok) { throw Error(response.statusText); }
-      }
-      else { setToken(null); }
-    }
-    catch (error) { console.log(error); }
+    setToken(null);
   }
 
   const onFinish = async (values: { user: any; password: any; remember: boolean; }) => {
@@ -116,10 +88,8 @@ const UserLogin: React.FC<Props> = ({
       onCancel={handleCancel}
       open={isModalVisible}
       destroyOnClose={true}
-      //centered={true}
-      afterClose={() => { setShowList(false) }}
+      centered={true}
       getContainer={false}
-      style={{ top: 20 }}
     >
       <div className="sel">
         <Form
@@ -142,11 +112,11 @@ const UserLogin: React.FC<Props> = ({
             name="user"
             rules={[{ required: true, message: t('user.fill') }]}
           >
-            <Select showSearch open={showList} searchValue={search} onBlur={()=>{setSelected(false)}} onFocus={() => { if ((!showList && !selected) || (showList && search && !listNotEmpty && !selected)) { } else { } }} onSearch={(value) => { setSearch(value); }} onSelect={() => { setSelected(true); setListNotEmpty(false); setShowList(false); setSearch(''); }}
+            <Select showSearch
               filterOption={(input, option) => (option!.children as unknown as string).toLowerCase().includes(input.toLowerCase())} placeholder={t('user.user')} virtual={true} size="large" suffixIcon={<UserOutlined style={{ fontSize: '120%' }} />}>
               {(state.data || []).map(user => (
-                <Option key={user['name']} value={user['name']} label={user['name']} onMouseEnter={() => { setListNotEmpty(true) }}>
-                  {user['name']}</Option>
+                <Option key={user} value={user} label={user}>
+                  {user}</Option>
               ))}
             </Select>
           </Form.Item>

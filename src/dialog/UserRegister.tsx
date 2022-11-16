@@ -57,9 +57,8 @@ const UserRegister: React.FC<Props> = ({
             cancelButtonProps={{ style: { display: "none" } }}
             open={isModalVisible}
             destroyOnClose={true}
-            //centered={true}
+            centered={true}
             mask={false}
-            style={{ top: 10 }}
         >
             <div className="sel">
                 <Form

@@ -69,9 +69,8 @@ const UserEditSA: React.FC<Props> = ({
             okButtonProps={{ style: { display: 'none' } }}
             open={isModalVisible}
             destroyOnClose={true}
-            //centered={true}
+            centered={true}
             getContainer={false}
-            style={{ top: 20 }}
         >
             <div className="sel">
                 <Form

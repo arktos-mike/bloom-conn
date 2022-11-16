@@ -24,18 +24,16 @@ interface DataType {
 }
 
 type Props = {
-  token: any;
 };
 
 const UserReport: React.FC<Props> = ({
-  token
 }
 ) => {
   const { t, i18n } = useTranslation();
   const [data, setData] = useState();
   const [users, setUsers] = useState();
   const [total, setTotal] = useState();
-  const [user, setUser] = useState(token && JSON.parse(Buffer.from(token.split('.')[1], 'base64').toString()).id );
+  const [user, setUser] = useState();
   const [period, setPeriod] = useState([dayjs().startOf('month'), dayjs()]);
   const [loading, setLoading] = useState(false);
   const [filteredInfo, setFilteredInfo] = useState<Record<string, FilterValue | null>>({});
@@ -233,10 +231,6 @@ const UserReport: React.FC<Props> = ({
   }, [i18n.language])
 
   useEffect(() => {
-    fetchUsers();
-  }, [token]);
-
-  useEffect(() => {
     fetchStatInfo();
     fetchData();
   }, [period, user]);
@@ -245,7 +239,7 @@ const UserReport: React.FC<Props> = ({
     <div ref={div} className='wrapper'>
       <div style={{ display: 'inline-flex', width: '100%', alignItems: 'center', justifyContent: 'center' }}>
         <h1 style={{ margin: 10 }}>{t('user.weaver')}</h1>
-        <Select style={{ width: '100%' }} userRights={['admin', 'manager']} token={token}
+        <Select style={{ width: '100%' }}
           value={user}
           onChange={(value: any) => { setUser(value) }}
           options={
@@ -255,7 +249,7 @@ const UserReport: React.FC<Props> = ({
           } />
         <h1 style={{ margin: 10 }}>{t('log.select')}</h1>
         <DatePicker style={{ flexGrow: 1 }} picker="month" format='MMMM YYYY' defaultValue={dayjs()} onChange={(e: any) => { setPeriod([e ? e?.startOf('month') : dayjs().startOf('month'), e ? e?.endOf('month') : dayjs()]) }} />
-        {false && <Button userRights={['admin', 'manager']} token={token} shape="circle" icon={<DeleteOutlined />} size="large" type="primary" style={{ margin: 10 }} onClick={confirm} ></Button>}
+        {false && <Button shape="circle" icon={<DeleteOutlined />} size="large" type="primary" style={{ margin: 10 }} onClick={confirm} ></Button>}
       </div>
       <Table
         columns={columns}
