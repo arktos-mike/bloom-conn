@@ -9,29 +9,33 @@ const Store = require('electron-store');
 const store = new Store();
 
 const init = async () => {
-  const locales = [{locale:'en',translation:enlocale}, {locale:'es',translation:eslocale}, {locale:'ru',translation:rulocale},{locale:'tr',translation: trlocale}];
+  if (!(store.get('lngs'))) {
+    const locales = [{ locale: 'en', translation: enlocale }, { locale: 'es', translation: eslocale }, { locale: 'ru', translation: rulocale }, { locale: 'tr', translation: trlocale }];
 
-  let mobj, obj, lngs
-  let locale
-  mobj = {}
-  lngs = []
-  for (let row of locales) {
-    obj = {}
-    for (let prop in row) {
-      if (prop == 'locale') {
-        locale = row[prop]
-        lngs.push(row[prop])
-        mobj = Object.assign(mobj, { [locale]: {} })
+    let mobj, obj, lngs
+    let locale
+    mobj = {}
+    lngs = []
+    for (let row of locales) {
+      obj = {}
+      for (let prop in row) {
+        if (prop == 'locale') {
+          locale = row[prop]
+          lngs.push(row[prop])
+          mobj = Object.assign(mobj, { [locale]: {} })
+        }
+        else if (prop == 'translation') {
+          obj = Object.assign(obj, { [prop]: row[prop] })
+        }
       }
-      else if (prop == 'translation') {
-        obj = Object.assign(obj, { [prop]: row[prop] })
-      }
+      mobj[locale] = obj
     }
-    mobj[locale] = obj
+    store.set('lngs', lngs);
+    store.set('locales', mobj);
+    store.set('lng', 'ru');
   }
-  store.set('lngs', lngs);
-  store.set('locales', mobj);
-  store.set('lng', 'ru');
+  if (!(store.get('groups'))) store.set('groups', [{ id: 1, name: 'Группа 1' }]);
+  if (!(store.get('machines'))) store.set('machines', [{ id: 1, name: 'Станок 1', ip: '192.168.1.2', groupId: 1 }]);
 }
 init();
 // Disable GPU Acceleration for Windows 7
@@ -61,7 +65,7 @@ const indexHtml = join(ROOT_PATH.dist, 'index.html')
 
 async function createWindow() {
   win = new BrowserWindow({
-    title: 'Main window',
+    title: 'BloomConn',
     icon: join(ROOT_PATH.public, 'icon.ico'),
     fullscreen: true,
     autoHideMenuBar: true,
@@ -123,8 +127,6 @@ ipcMain.handle('open-win', (event, arg) => {
   const childWindow = new BrowserWindow({
     webPreferences: {
       preload,
-      nodeIntegration: true,
-      contextIsolation: false,
     },
   })
 

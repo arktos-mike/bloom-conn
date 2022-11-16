@@ -7,6 +7,9 @@ import dayjs from 'dayjs';
 
 import { FabricFullIcon, ButtonIcon, WeftIcon, FabricPieceIcon, FabricPieceLengthIcon, WarpBeamIcon, WarpBeamsIcon } from '@/components/Icons';
 
+const Store = require('electron-store');
+const store = new Store();
+
 const cardStyle = { background: "whitesmoke", width: '100%', display: 'flex', flexDirection: 'column' as 'column' }
 const cardHeadStyle = { background: "#1890ff", color: "white" }
 const cardBodyStyle = { flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column' as 'column' }
@@ -67,6 +70,7 @@ const Overview: React.FC<Props> = ({
 
   useEffect(() => {
     setHeight(div.current?.offsetHeight ? div.current?.offsetHeight : 0)
+    console.log(store.get('machines'))
   }, [])
 
   useEffect(() => {

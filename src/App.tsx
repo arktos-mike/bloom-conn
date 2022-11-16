@@ -7,7 +7,7 @@ import { BellOutlined, ReconciliationOutlined, TagsOutlined, ReadOutlined, Sched
 import { ButtonIcon, FabricFullIcon, WarpBeamIcon, WeftIcon } from "./components/Icons"
 
 import Overview from "./page/overview";
-import SettingsOp from "./page/settings_op";
+import Settings from "./page/settings";
 import MonthReport from "./page/month_report";
 import UserReport from "./page/user_report";
 
@@ -134,8 +134,8 @@ const App: React.FC = () => {
                   <Route path={'/reports'} element={<MonthReport />} />
                   <Route path={'/reports/monthReport'} element={<MonthReport />} />
                   <Route path={'/reports/userReport'} element={<UserReport />} />
-                  <Route path={'/settings'} element={<SettingsOp />} />
-                  <Route path={'/settings/settingsOp'} element={<SettingsOp />} />
+                  <Route path={'/settings'} element={<Settings />} />
+                  <Route path={'/settings/settingsOp'} element={<Settings />} />
                   <Route path="*" element={<Navigate to="/" />} />
                 </Routes>
                 <Drawer
