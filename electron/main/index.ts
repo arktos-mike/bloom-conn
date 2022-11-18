@@ -34,8 +34,10 @@ const init = async () => {
     store.set('locales', mobj);
     store.set('lng', 'ru');
   }
-  if (!(store.get('groups'))) store.set('groups', [{ id: 1, name: 'Группа 1' }]);
-  if (!(store.get('machines'))) store.set('machines', [{ id: 1, name: 'Станок 1', ip: '192.168.1.2', groupId: 1 }]);
+ // if (!(store.get('groups'))) store.set('groups', [{ id: 1, name: 'Группа 1' }]);
+ // if (!(store.get('machines'))) store.set('machines', [{ id: 1, name: 'Станок 1', ip: '192.168.1.2', groupId: 1 }]);
+  store.set('groups', [{ id: 1, name: 'Группа 1' }, { id: 2, name: 'Группа 2' }]);
+  store.set('machines', [{ id: 1, name: 'Станок 1', ip: '192.168.1.2', groupId: 1 }, { id: 2, name: 'Станок 2', ip: '192.168.1.3', groupId: 2 }]);
 }
 init();
 // Disable GPU Acceleration for Windows 7

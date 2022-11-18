@@ -30,6 +30,7 @@ const Component = (props: any) => {
             defaultValue={props.defaultValue}
             value={props.tag?.val ? props.tag?.val : props.value}
             placeholder={t(props.placeholder)}
+            id={props.id}
             style={{ width: "100%" }}
             disabled
           />
@@ -50,6 +51,7 @@ const Component = (props: any) => {
           placeholder={t(props.placeholder)}
           onChange={props.onChange}
           onFocus={props.onFocus}
+          id={props.id}
           style={{ width: "100%" }}
           status={props.status}
         />
