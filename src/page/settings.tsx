@@ -1,10 +1,11 @@
-import { Card, Col, Divider, Form, notification, Row, Select, Skeleton, Space, Button, } from 'antd';
+import { Card, Col, Divider, Form, notification, Row, Select, Skeleton, Space, Button } from 'antd';
 import React, { useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next';
 import { DesktopOutlined, WifiOutlined, GlobalOutlined, CalendarOutlined, ClockCircleOutlined, ReloadOutlined, PlusOutlined, MinusOutlined } from '@ant-design/icons';
 import { DatePicker, TimePicker, InputNumber, Input, } from '../components';
 import format from 'dayjs';
 import dayjs from 'dayjs';
+import type { DataNode, TreeProps } from 'antd/es/tree';
 
 const cardStyle = { background: "whitesmoke", width: '100%', display: 'flex', flexDirection: 'column' as 'column' }
 const cardHeadStyle = { background: "#1890ff", color: "white" }
@@ -48,12 +49,18 @@ const Settings: React.FC<Props> = ({
     setName('');
   };
 
+  const removeItem = (id:React.Key) => {
+    const newData = groups.filter(item => item.id !== id);
+    newData.length && setGroups(newData);
+  };
+
   const onFinish = (values: any) => {
     console.log('Received values of form:', values);
   };
 
   const handleChange = () => {
     store.set('groups', groups);
+    console.log(groups)
     form.setFieldsValue({ machines: machines.filter(item => item.groupId == form.getFieldValue('group')) });
   };
   const openNotificationWithIcon = (type: string, message: string, dur: number, descr?: string, style?: React.CSSProperties) => {
@@ -85,6 +92,7 @@ const Settings: React.FC<Props> = ({
                     size='large'
                     onChange={handleChange}
                     placeholder={t('group.self')}
+                    defaultActiveFirstOption
                     dropdownRender={menu => (
                       <>
                         {menu}
@@ -95,14 +103,18 @@ const Settings: React.FC<Props> = ({
                             value={name}
                             onChange={onNameChange}
                           />
-                          <Button size='large' icon={<PlusOutlined />} onClick={addItem}>
+                          <Button size='large' type="primary" disabled={name==''} icon={<PlusOutlined />} onClick={addItem}>
                             {t('group.add')}
                           </Button>
                         </Space>
                       </>
                     )}
-                    options={groups.map(item => ({ key: item.id, label: item.name, value: item.id }))}
-                  />
+                    optionLabelProp="label" >
+                    {groups.map(item => (
+                  <Option key={item.id} value={item.id} label={item.name}>
+                    <Space style={{ padding: '0 8px 4px', alignItems: 'center', justifyContent: 'center' }}>{item.name}<Button shape='circle' danger type="default" size='small' disabled={groups.length==1} onClick={() => removeItem(item.id)} block icon={<MinusOutlined />} /></Space></Option>
+                ))}
+                  </Select>
                 </Form.Item>
                 <Form.List name="machines">
                   {(fields, { add, remove }) => (
