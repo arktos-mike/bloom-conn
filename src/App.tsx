@@ -98,7 +98,7 @@ const App: React.FC = () => {
 
   const bigItems = [
     { label: <Link onClick={showDrawer} to="/">{t('menu.overview')}</Link>, title: '', key: 'overview', icon: <EyeOutlined style={{ fontSize: '100%' }} /> },
-    { label: t('menu.settings'), title: '', key: 'settings', icon: <SettingOutlined style={{ fontSize: '100%' }} />, children: [{ label: <Link onClick={showDrawer} to="/settings/settingsOp">{t('menu.settingsOp')}</Link>, title: '', key: 'settingsOp', },] },
+    { label: t('menu.settings'), title: '', key: 'settings', icon: <SettingOutlined style={{ fontSize: '100%' }} />, children: [{ label: <Link onClick={showDrawer} to="/settings/settingsNet">{t('menu.settingsNet')}</Link>, title: '', key: 'settingsNet', },] },
     { label: t('menu.reports'), title: '', key: 'reports', icon: <ReconciliationOutlined style={{ fontSize: '100%' }} />, children: [{ label: <Link onClick={showDrawer} to="/reports/monthReport">{t('menu.monthReport')}</Link>, title: '', key: 'monthReport', }, { label: <Link onClick={showDrawer} to="/reports/userReport">{t('menu.userReport')}</Link>, title: '', key: 'userReport', }] },
   ];
 
@@ -110,7 +110,7 @@ const App: React.FC = () => {
             <div className="logo" onClick={showDrawer}>
               <img src={logo} className="applogo" alt=""></img>
             </div>
-            <div className="mode">{t('panel.main')}</div>
+            <div className="mode">{t('menu.'+(location.pathname == '/' ? 'title' : location.pathname.split("/").filter((item) => item).slice(-1)[0] ))}</div>
             <div className="lang">
               <Select value={i18n.language} optionLabelProp="label" onChange={lngChange} size="large" dropdownStyle={{ fontSize: '40px !important' }} dropdownAlign={{ offset: [-40, 4] }} dropdownMatchSelectWidth={false} style={{ color: "white" }} bordered={false} >
                 {(store.get('lngs')).map((lng: string) => (
@@ -135,7 +135,7 @@ const App: React.FC = () => {
                   <Route path={'/reports/monthReport'} element={<MonthReport />} />
                   <Route path={'/reports/userReport'} element={<UserReport />} />
                   <Route path={'/settings'} element={<Settings />} />
-                  <Route path={'/settings/settingsOp'} element={<Settings />} />
+                  <Route path={'/settings/settingsNet'} element={<Settings />} />
                   <Route path="*" element={<Navigate to="/" />} />
                 </Routes>
                 <Drawer

@@ -3,10 +3,11 @@ const locale = {
   "footer": "© TEHMASHHOLDING Cheboksary, Russia",
   "decimalSeparator": ".",
   "menu": {
+    "title": "Loom fleet monitoring system",
     "close": "CLOSE",
     "overview": "OVERVIEW",
     "settings": "SETTINGS",
-    "settingsOp": "OPERATOR PANEL",
+    "settingsNet": "NETWORK CONFIGURATION",
     "users": "USER ADMINISTRATION",
     "shifts": "SHIFT MANAGMENT",
     "reminders": "MAINTENANCE REMINDERS",
@@ -180,6 +181,16 @@ const locale = {
     "editsubmit": "EDIT",
     "regsubmit": "REGISTER"
   },
+  "group": {
+    "self": "Group",
+    "add": "ADD GROUP",
+    "placeholder": "Group name"
+  },
+  "machine": {
+    "self": "Loom",
+    "add": "ADD LOOM",
+    "placeholder": "Loom name"
+  },
   "confirm": {
     "ok": "YES",
     "descr": "Do you really want to make changes?",
@@ -250,7 +261,8 @@ const locale = {
     "tcp": "ModbusTCP settings",
     "language": "Language selection",
     "actions": "Actions",
-    "network": "Network settings",
+    "network": "Network settings of machines",
+    "groups": "Settings of machine groups",
     "lifetime": "Lifetime loom statistics",
     "setpoints": "Planned setpoints",
     "equipment": "Equipment parameters"

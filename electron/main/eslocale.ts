@@ -3,10 +3,11 @@ const locale = {
   "footer": "© TEHMASHHOLDING Cheboksary, Rusia",
   "decimalSeparator": ",",
   "menu": {
+    "title": "Sistema de monitoreo de flota de telares",
     "close": "CERRAR",
     "overview": "DESCRIPCIÓN GENERAL",
     "settings": "CONFIGURACIÓN",
-    "settingsOp": "PANEL DEL OPERADOR",
+    "settingsNet": "CONFIGURACIÓN DE RED",
     "users": "ADMINISTRACIÓN DE USUARIOS",
     "shifts": "GESTIÓN DE TURNOS",
     "reminders": "RECORDATORIOS DE MANTENIMIENTO",
@@ -180,6 +181,16 @@ const locale = {
     "editsubmit": "EDITAR",
     "regsubmit": "REGISTRARSE"
   },
+  "group": {
+    "self": "Grupo",
+    "add": "AÑADIR GRUPO",
+    "placeholder": "Nombre del grupo"
+  },
+  "machine": {
+    "self": "Telar",
+    "add": "AÑADIR TELAR",
+    "placeholder": "Nombre del telar"
+  },
   "confirm": {
     "ok": "SÍ",
     "descr": "Realmente quieres hacer cambios?",
@@ -250,7 +261,8 @@ const locale = {
     "tcp": "Configuración de ModbusTCP",
     "language": "Selección de idioma",
     "actions": "Acciones",
-    "network": "Configuración de red",
+    "network": "Configuración de red de las máquinas",
+    "groups": "Configuración de grupos de máquinas",
     "lifetime": "Estadísticas de telar de por vida",
     "setpoints": "Puntos de ajuste planificados",
     "equipment": "Parámetros del equipo"

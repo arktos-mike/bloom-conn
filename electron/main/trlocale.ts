@@ -3,10 +3,11 @@ const locale = {
   "footer": "© TEHMASHHOLDİNG Cheboksary, Rusya Federasyonu",
   "decimalSeparator": ",",
   "menu": {
+    "title": "Loom filo izleme sistemi",
     "close": "KAPAT",
     "overview": "GENEL BAKIŞ",
     "settings": "AYARLAR",
-    "settingsOp": "OPERATÖR PANELI",
+    "settingsNet": "AĞ YAPILANDIRMASI",
     "users": "KULLANICI YÖNETIMI",
     "shifts": "VARDİYALARI YÖNETME",
     "reminders": "BAKIM HATIRLATICILARI",
@@ -180,6 +181,16 @@ const locale = {
     "editsubmit": "DÜZENLE",
     "regsubmit": "KAYDOLUN"
   },
+  "group": {
+    "self": "Grup",
+    "add": "GRUP EKLE",
+    "placeholder": "Grubun adı"
+  },
+  "machine": {
+    "self": "Tezgah",
+    "add": "TEZGAH EKLE",
+    "placeholder": "Tezgah adı"
+  },
   "confirm": {
     "ok": "EVET",
     "descr": "Gerçekten değişiklik yapmak istiyor musunuz?",
@@ -250,7 +261,8 @@ const locale = {
     "tcp": "ModbusTCP ayarları",
     "language": "Dil seçimi",
     "actions": "Eylemler",
-    "network": "Ağ ayarları",
+    "network": "Makinelerin ağ ayarlar",
+    "groups": "Makine gruplarının ayarları",
     "lifetime": "Ömür boyu tezgah istatistikleri",
     "setpoints": "Planlanan ayar noktaları",
     "equipment": "Ekipman parametreleri"
