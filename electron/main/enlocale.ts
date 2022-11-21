@@ -191,6 +191,11 @@ const locale = {
     "add": "ADD LOOM",
     "placeholder": "Loom name"
   },
+  "period": {
+    "shift": "shift",
+    "day": "day",
+    "month": "month"
+  },
   "confirm": {
     "ok": "YES",
     "descr": "Do you really want to make changes?",

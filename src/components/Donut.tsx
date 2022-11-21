@@ -12,16 +12,16 @@ const Component: React.FC<any> = memo(
       autofit: true,
       appendPadding: 5,
       angleField: 'value',
-      radius: 1, innerRadius: 0.7,
+      radius: 1, innerRadius: 0.8,
       colorField: 'reason',
       color: (data: any) => {
-        if (data['reason'] == 'run') return '#52c41aFF';
-        else if (data['reason'] == 'button') return '#7339ABFF';
-        else if (data['reason'] == 'fabric') return '#005498FF';
-        else if (data['reason'] == 'tool') return '#E53935FF';
-        else if (data['reason'] == 'weft') return '#FFB300FF';
-        else if (data['reason'] == 'warp') return '#FF7F27FF';
-        else if (data['reason'] == 'other') return '#000000FF';
+        if (data['reason'] == 'run') return '#52c41aBB';
+        else if (data['reason'] == 'button') return '#7339ABBB';
+        else if (data['reason'] == 'fabric') return '#005498BB';
+        else if (data['reason'] == 'tool') return '#E53935BB';
+        else if (data['reason'] == 'weft') return '#FFB300BB';
+        else if (data['reason'] == 'warp') return '#FF7F27BB';
+        else if (data['reason'] == 'other') return '#000000BB';
         return '#00000000';
       },
       label: {
@@ -34,7 +34,8 @@ const Component: React.FC<any> = memo(
         title: false,
         content: {
           style: {
-            fontSize: 14,
+            fontSize: 26,
+            color:'white',
             whiteSpace: 'pre-wrap',
             overflow: 'hidden',
             textOverflow: 'ellipsis',

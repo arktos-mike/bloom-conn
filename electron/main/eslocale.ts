@@ -191,6 +191,11 @@ const locale = {
     "add": "AÑADIR TELAR",
     "placeholder": "Nombre del telar"
   },
+  "period": {
+    "shift": "turno",
+    "day": "día",
+    "month": "mes"
+  },
   "confirm": {
     "ok": "SÍ",
     "descr": "Realmente quieres hacer cambios?",

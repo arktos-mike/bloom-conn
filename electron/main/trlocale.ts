@@ -191,6 +191,11 @@ const locale = {
     "add": "TEZGAH EKLE",
     "placeholder": "Tezgah adı"
   },
+  "period": {
+    "shift": "vardiya",
+    "day": "gün",
+    "month": "ay"
+  },
   "confirm": {
     "ok": "EVET",
     "descr": "Gerçekten değişiklik yapmak istiyor musunuz?",

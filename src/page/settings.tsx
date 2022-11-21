@@ -233,25 +233,26 @@ const Settings: React.FC<Props> = ({
                       </div>
                       <Form.Item style={{ marginTop: 15 }}>
                         <Button type="dashed" size='large' disabled={!form.getFieldValue('group')} onClick={() => {
-                          setMachines([...machines, { id: machines.length ? Number(machines.slice(-1)[0].id) + 1 : 1, groupId: form.getFieldValue('group'), name: machines.length ? machines.slice(-1)[0].name : t('machine.placeholder'), ip: machines.length ? machines.slice(-1)[0].ip : '0.0.0.0' }]);
-                          add({ id: machines.length ? Number(machines.slice(-1)[0].id) + 1 : 1, groupId: form.getFieldValue('group'), name: machines.length ? machines.slice(-1)[0].name : t('machine.placeholder'), ip: machines.length ? machines.slice(-1)[0].ip : '0.0.0.0' });
+                          const maxId = Math.max(...machines.map(o => Number(o.id)))
+                          setMachines([...machines, { id: machines.length ? maxId + 1 : 1, groupId: form.getFieldValue('group'), name: machines.length ? machines.filter(i => i.id == maxId)[0].name : t('machine.placeholder'), ip: machines.length ? machines.filter(i => i.id == maxId)[0].ip : '0.0.0.0' }]);
+                        add({id: machines.length ? maxId + 1 : 1, groupId: form.getFieldValue('group'), name: machines.length ? machines.filter(i => i.id == maxId)[0].name : t('machine.placeholder'), ip: machines.length ? machines.filter(i => i.id == maxId)[0].ip : '0.0.0.0' });
                         }} block icon={<PlusOutlined />}>
-                          {t('machine.add')}
-                        </Button>
-                      </Form.Item>
+                        {t('machine.add')}
+                      </Button>
+                    </Form.Item>
                     </>
-                  )
+              )
                 }}
-              </Form.List>
-              <Form.Item wrapperCol={{ offset: 10, span: 14 }}>
-                <Button type="primary" size='large' htmlType="submit">
-                  {t('user.submit')}
-                </Button>
-              </Form.Item>
-            </Form>
-          </Card>
-        </Col>
-      </Row>
+            </Form.List>
+            <Form.Item wrapperCol={{ offset: 10, span: 14 }}>
+              <Button type="primary" size='large' htmlType="submit">
+                {t('user.submit')}
+              </Button>
+            </Form.Item>
+          </Form>
+        </Card>
+      </Col>
+    </Row>
     </div >
   )
 }
