@@ -9,6 +9,7 @@ dayjs.extend(duration);
 import isBetween from 'dayjs/plugin/isBetween';
 import Meta from "antd/lib/card/Meta";
 import Donut from "./Donut";
+import LoomDetail from "@/dialog/LoomDetail";
 dayjs.extend(isBetween);
 
 const Component = (props: any) => {
@@ -16,6 +17,7 @@ const Component = (props: any) => {
   const [shift, setShift] = useState({ name: '', start: '', end: '', duration: '', picks: 0, meters: 0, rpm: 0, mph: 0, efficiency: 0, starts: 0, runtime: '', stops: {} })
   const [modeCode, setModeCode] = useState({ val: 0, updated: {} });
   const [tags, setTags] = useState({ data: [] });
+  const [isModalVisible, setIsModalVisible] = useState(false);
   const [weaver, setWeaver] = useState('');
   const [shiftDonut, setShiftDonut] = useState([] as any)
   const [shiftDonutSel, setShiftDonutSel] = useState({ run: true, other: true, button: true, warp: true, weft: true, tool: true, fabric: true } as any)
@@ -151,7 +153,9 @@ const Component = (props: any) => {
   }, [shift.end && dayjs().isAfter(shift.end)])
 
   return (
-    <Card title={<Space direction="horizontal" style={{ width: '100%', justifyContent: 'space-between' }}><b style={{ fontSize: '150%' }}>{props.machine?.name}</b><span style={{ color: '#FFFFFF93', fontSize: '120%' }}>{stopwatch(modeCode.updated)}</span><span style={{ fontSize: '150%' }}>{modeCodeObj(modeCode.val).icon}</span></Space>} loading={!getTagLink('modeCode')} bordered={false} size='small' style={cardStyle} headStyle={cardHeadStyle} bodyStyle={cardBodyStyle} >
+    <>
+    <LoomDetail isModalVisible={isModalVisible} shift={shift} machine={props.machine} tags={tags} modeCode={modeCode} setIsModalVisible={setIsModalVisible} />
+    <Card onClick={()=>{setIsModalVisible(!isModalVisible)}} title={<Space direction="horizontal" style={{ width: '100%', justifyContent: 'space-between' }}><b style={{ fontSize: '150%' }}>{props.machine?.name}</b><span style={{ color: '#FFFFFF93', fontSize: '120%' }}>{stopwatch(modeCode.updated)}</span><span style={{ fontSize: '150%' }}>{modeCodeObj(modeCode.val).icon}</span></Space>} loading={!getTagLink('modeCode')} bordered={false} size='small' style={cardStyle} headStyle={cardHeadStyle} bodyStyle={cardBodyStyle} >
       <div style={{ display: 'inline-flex', width: '100%', alignItems: 'center', justifyContent: 'center' }}>
         <div style={{ width: '30%', height: '112px' }}>
           <Donut data={shiftDonut} selected={shiftDonutSel} text={(Number(Number(shift['efficiency']).toFixed(shift['efficiency'] < 10 ? 2 : 1)).toLocaleString(i18n.language) + t('tags.efficiency.eng'))} />
@@ -189,6 +193,7 @@ const Component = (props: any) => {
         </Form>
       </div>
     </Card>
+    </>
   );
 }
 export default Component;
