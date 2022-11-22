@@ -1,15 +1,13 @@
-import { Card, Form, Space, Spin } from "antd";
+import { Badge, Card, Divider, Empty, Form, Modal, Space, Spin } from "antd";
 import { useTranslation } from 'react-i18next';
-import { ToolOutlined, QuestionCircleOutlined, LoadingOutlined, SyncOutlined, DashboardOutlined, ClockCircleOutlined, RiseOutlined, ScheduleOutlined, UserOutlined, ReconciliationOutlined, HistoryOutlined } from '@ant-design/icons';
-import { FabricFullIcon, ButtonIcon, WeftIcon, WarpBeamIcon } from '@/components/Icons';
+import { ToolOutlined, QuestionCircleOutlined, LoadingOutlined, SyncOutlined, DashboardOutlined, ClockCircleOutlined, RiseOutlined, ScheduleOutlined, UserOutlined, ReconciliationOutlined, HistoryOutlined, PieChartOutlined, ShoppingCartOutlined } from '@ant-design/icons';
+import { FabricFullIcon, ButtonIcon, WeftIcon, WarpBeamIcon, FabricPieceLengthIcon, FabricPieceIcon, DensityIcon, SpeedIcon, StatIcon } from '@/components/Icons';
 import { useEffect, useState } from "react";
 import dayjs from 'dayjs';
 import duration from 'dayjs/plugin/duration';
 dayjs.extend(duration);
 import isBetween from 'dayjs/plugin/isBetween';
-import Meta from "antd/lib/card/Meta";
 import Donut from "./Donut";
-import LoomDetail from "@/dialog/LoomDetail";
 dayjs.extend(isBetween);
 
 const Component = (props: any) => {
@@ -17,8 +15,9 @@ const Component = (props: any) => {
   const [shift, setShift] = useState({ name: '', start: '', end: '', duration: '', picks: 0, meters: 0, rpm: 0, mph: 0, efficiency: 0, starts: 0, runtime: '', stops: {} })
   const [modeCode, setModeCode] = useState({ val: 0, updated: {} });
   const [tags, setTags] = useState({ data: [] });
-  const [isModalVisible, setIsModalVisible] = useState(false);
   const [weaver, setWeaver] = useState('');
+  const [pieces, setPieces] = useState();
+  const [lifetime, setLifetime] = useState({ type: '', serialno: '', mfgdate: '', picks: 0, cloth: 0, motor: '' });
   const [shiftDonut, setShiftDonut] = useState([] as any)
   const [shiftDonutSel, setShiftDonutSel] = useState({ run: true, other: true, button: true, warp: true, weft: true, tool: true, fabric: true } as any)
 
@@ -27,6 +26,18 @@ const Component = (props: any) => {
   const stopwatch = (start: any) => {
     let diff = dayjs.duration(dayjs().diff(start))
     return (diff.days() > 0 ? diff.days() + t('shift.days') + " " : "") + (diff.hours() > 0 ? diff.hours() + t('shift.hours') + " " : "") + (diff.minutes() > 0 ? diff.minutes() + t('shift.mins') + " " : "") + (diff.seconds() > 0 ? diff.seconds() + t('shift.secs') : "")
+  }
+
+  const stopObj = (reason: string, enable: boolean) => {
+    let obj;
+    if (reason == 'other') { obj = { color: enable ? '#000000FF' : '#8c8c8c', text: t('tags.mode.init'), icon: <QuestionCircleOutlined style={{ fontSize: '130%', color: enable ? '#000000FF' : '#8c8c8c', paddingInline: 5 }} /> } }
+    else if (reason == 'button') { obj = { color: enable ? '#7339ABFF' : '#8c8c8c', text: t('tags.mode.stop'), icon: <ButtonIcon style={{ fontSize: '130%', color: enable ? '#7339ABFF' : '#8c8c8c', paddingInline: 5 }} /> } }
+    else if (reason == 'warp') { obj = { color: enable ? '#FF7F27FF' : '#8c8c8c', text: t('tags.mode.stop'), icon: <WarpBeamIcon style={{ fontSize: '130%', color: enable ? '#FF7F27FF' : '#8c8c8c', paddingInline: 5 }} /> } }
+    else if (reason == 'weft') { obj = { color: enable ? '#FFB300FF' : '#8c8c8c', text: t('tags.mode.stop'), icon: <WeftIcon style={{ fontSize: '130%', color: enable ? '#FFB300FF' : '#8c8c8c', paddingInline: 5 }} /> } }
+    else if (reason == 'tool') { obj = { color: enable ? '#E53935FF' : '#8c8c8c', text: t('tags.mode.stop'), icon: <ToolOutlined style={{ fontSize: '130%', color: enable ? '#E53935FF' : '#8c8c8c', paddingInline: 5 }} /> } }
+    else if (reason == 'fabric') { obj = { color: enable ? '#005498FF' : '#8c8c8c', text: t('tags.mode.stop'), icon: <FabricFullIcon style={{ fontSize: '130%', color: enable ? '#005498FF' : '#8c8c8c', paddingInline: 5 }} /> } }
+    else { obj = { color: enable ? '#00000000' : '#8c8c8c', text: t('tags.mode.unknown'), icon: <QuestionCircleOutlined style={{ fontSize: '130%', color: enable ? '#00000000' : '#8c8c8c', paddingInline: 5 }} /> } }
+    return obj;
   }
 
   const modeCodeObj = (code: Number) => {
@@ -42,7 +53,7 @@ const Component = (props: any) => {
     return obj;
   }
 
-  const cardStyle = { backgroundColor: modeCodeObj(modeCode.val).color, width: '100%', display: 'flex',  height: '210px', flexDirection: 'column' as 'column' }
+  const cardStyle = { backgroundColor: modeCodeObj(modeCode.val).color, width: '100%', display: 'flex', height: '210px', flexDirection: 'column' as 'column' }
   const cardHeadStyle = { background: modeCodeObj(modeCode.val).color, color: "white" }
   const cardBodyStyle = { flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column' as 'column' }
 
@@ -61,6 +72,89 @@ const Component = (props: any) => {
     return parseFloat(out.join("."));
   }
 
+  const loomDetail = () => {
+    Modal.info({
+      title: <span style={{ fontSize: '20px' }}><b>{props.machine.name + (lifetime['type'] && (' ' + lifetime['type'])) + (lifetime['serialno'] && (' #' + lifetime['serialno'])) + ' - ' + props.machine.ip}</b></span>,
+      centered: true,
+      maskClosable: true,
+      width: 600,
+      icon: false,
+      okText: t('menu.close'),
+      content: (
+        (modeCode.val > 0) ?
+          <Form
+            labelCol={{ span: 4 }}
+            wrapperCol={{ span: 20 }}
+            size='small'
+            form={formShift}
+            style={{ width: '100%' }}
+            preserve={false}
+            colon={false}
+          >
+            <Divider orientation="left"><b>{props.period ? props.period == 'shift' ? t('shift.shift') + ' ' + shift['name'] : props.period == 'month' ? dayjs().format('MMMM YYYY') : dayjs().format('LL') : dayjs().format('LL')}</b></Divider>
+            {weaver && <Form.Item label={<UserOutlined style={{ fontSize: '130%', color: '#1890ff' }} />} >
+              <span style={{ fontSize: '18px' }}>{weaver}</span>
+            </Form.Item>}
+            <Form.Item label={<RiseOutlined style={{ color: '#1890ff', fontSize: '130%' }} />}>
+              <span style={{ fontSize: '18px' }}>{Number(Number(shift['efficiency']).toFixed(shift['efficiency'] < 10 ? 2 : 1)).toLocaleString(i18n.language) + ' ' + t('tags.efficiency.eng')}</span>
+            </Form.Item>
+            <Form.Item label={<ClockCircleOutlined style={{ color: '#1890ff', fontSize: '130%' }} />} >
+              <span style={{ fontSize: '18px' }}>{(props.period ? props.period == 'shift' ? dayjs(shift['start']).format('LL LT') : props.period == 'month' ? dayjs().startOf('month').format('LL LT') : dayjs().startOf('day').format('LL LT') : dayjs().startOf('day').format('LL LT')) + ' - ' + (props.period ? props.period == 'shift' ? dayjs(shift['end']).format('LL LT') : dayjs().format('LL LT') : dayjs().format('LL LT')) + (props.period == 'shift' ? (', ' + duration2text(dayjs.duration(shift['duration']))) : '')}</span>
+            </Form.Item>
+            <Form.Item label={<SyncOutlined style={{ fontSize: '130%', color: '#1890ff' }} />}  >
+              <span style={{ fontSize: '18px' }}>{Number(Number(shift['meters']).toFixed(2)).toLocaleString(i18n.language) + ' ' + t('tags.clothMeters.eng')}</span>
+            </Form.Item>
+            <Form.Item label={<DashboardOutlined style={{ fontSize: '130%', color: '#1890ff' }} />} >
+              <span style={{ fontSize: '18px' }}>{Number(Number(shift['rpm']).toFixed(1)).toLocaleString(i18n.language) + ' ' + t('tags.speedMainDrive.eng') + ', ' + Number(Number(shift['mph']).toFixed(2)).toLocaleString(i18n.language) + ' ' + t('tags.speedCloth.eng')}</span>
+            </Form.Item>
+            <Form.Item label={<PieChartOutlined style={{ color: '#1890ff', fontSize: '130%' }} />} >
+              <Space direction="horizontal" style={{ width: '100%', justifyContent: 'start', alignItems: 'start' }} wrap>
+                {shift['starts'] > 0 && <div onClick={() => setShiftDonutSel({ ...shiftDonutSel, run: !shiftDonutSel.run })} style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }} key={Object.keys(stop)[0]}><Badge size='small'
+                  count={shift['starts']} overflowCount={999}
+                  style={{ backgroundColor: shiftDonutSel['run'] ? '#52c41aFF' : '#8c8c8c' }}
+                /><SyncOutlined style={{ fontSize: '130%', color: shiftDonutSel['run'] ? '#52c41aFF' : '#8c8c8c', paddingInline: 5 }} />{duration2text(dayjs.duration(shift['runtime']))}</div>}
+                {Array.isArray(shift['stops']) && shift['stops'].map((stop: any) => (
+                  stop[Object.keys(stop)[0]]['total'] > 0 && <div onClick={() => setShiftDonutSel({ ...shiftDonutSel, [Object.keys(stop)[0]]: !shiftDonutSel[Object.keys(stop)[0]] })} style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }} key={Object.keys(stop)[0]}><Badge size='small'
+                    count={stop[Object.keys(stop)[0]]['total']} overflowCount={999}
+                    style={{ backgroundColor: stopObj(Object.keys(stop)[0], shiftDonutSel[Object.keys(stop)[0]]).color }}
+                  />{stopObj(Object.keys(stop)[0], shiftDonutSel[Object.keys(stop)[0]]).icon}{duration2text(dayjs.duration(stop[Object.keys(stop)[0]]['dur']))}</div>))
+                }
+              </Space>
+            </Form.Item>
+            <Divider orientation="left"><b>{t('panel.setpoints')}</b></Divider>
+            <Form.Item label={<DensityIcon style={{ color: '#1890ff', fontSize: '130%' }} />}>
+              <span style={{ fontSize: '18px' }}>{getTagVal('planClothDensity') + ' ' + t('tags.planClothDensity.eng')}</span>
+            </Form.Item>
+            <Form.Item label={<SpeedIcon style={{ color: '#1890ff', fontSize: '130%' }} />}>
+              <span style={{ fontSize: '18px' }}>{getTagVal('planSpeedMainDrive') + ' ' + t('tags.planSpeedMainDrive.eng')}</span>
+            </Form.Item>
+            <Form.Item label={<StatIcon style={{ color: '#1890ff', fontSize: '130%' }} />}>
+              <span style={{ fontSize: '18px' }}>{getTagVal('planSpwarpShrinkageeedMainDrive') + ' ' + t('tags.warpShrinkage.eng')}</span>
+            </Form.Item>
+            <Form.Item label={<FabricPieceLengthIcon style={{ color: '#1890ff', fontSize: '130%' }} />}>
+              <span style={{ fontSize: '18px' }}>{getTagVal('orderLength') + '/' + getTagVal('planOrderLength') + ' ' + t('tags.orderLength.eng')}</span>
+            </Form.Item>
+            <Form.Item label={<FabricPieceIcon style={{ color: '#1890ff', fontSize: '130%' }} />}>
+              <span style={{ fontSize: '18px' }}>{pieces + '/' + getTagVal('planOrderLength') != '0' ? Math.floor(localeParseFloat(getTagVal('warpBeamLength')) * (1 - 0.01 * localeParseFloat(getTagVal('warpShrinkage'))) / localeParseFloat(getTagVal('planOrderLength'))) : 0}</span>
+            </Form.Item>
+            <Divider orientation="left"><b>{t('panel.lifetime')}</b></Divider>
+            <Form.Item label={<ShoppingCartOutlined style={{ color: '#1890ff', fontSize: '130%' }} />} >
+              <span style={{ fontSize: '18px' }}>{lifetime['mfgdate'] && dayjs(lifetime['mfgdate']).format("LL")}</span>
+            </Form.Item>
+            <Form.Item label={<SyncOutlined style={{ color: '#1890ff', fontSize: '130%' }} />} >
+              <span style={{ fontSize: '18px' }}>{lifetime['picks'] > 0 && (lifetime['picks'] + ' ' + t('tags.planClothDensity.eng').split('/')[0])}</span>
+            </Form.Item>
+            <Form.Item label={<FabricPieceIcon style={{ color: '#1890ff', fontSize: '130%' }} />} >
+              <span style={{ fontSize: '18px' }}>{lifetime['cloth'] > 0 && (Number(Number(lifetime['cloth']).toFixed(2).toString()).toLocaleString(i18n.language) + ' ' + t('tags.planClothDensity.eng')?.split('/')[1]?.slice(-1))}</span>
+            </Form.Item>
+            <Form.Item label={<HistoryOutlined style={{ color: '#1890ff', fontSize: '130%' }} />} >
+              <span style={{ fontSize: '18px' }}>{lifetime['motor'] && duration2text(lifetime['motor'])}</span>
+            </Form.Item>
+          </Form> : <Empty description={false} />
+      ),
+      onOk() { },
+    });
+  };
   const fetchShift = async () => {
     try {
       const response = await fetch('http://' + props.machine?.ip + ':3000/shifts/currentshift');
@@ -115,16 +209,42 @@ const Component = (props: any) => {
     catch (error) { console.log(error); }
   }
 
+  const fetchPieces = async () => {
+    try {
+      const response = await fetch('http://' + props.machine?.ip + ':3000/logs/getRolls');
+      if (!response.ok) { throw Error(response.statusText); }
+      const json = await response.json();
+      setPieces(json);
+    }
+    catch (error) { console.log(error); }
+  }
+
+  const fetchMachineInfo = async () => {
+    try {
+      const response = await fetch('http://' + props.machine?.ip + ':3000/machine');
+      if (!response.ok) { throw Error(response.statusText); }
+      const json = await response.json();
+      setLifetime(json[0]);
+    }
+    catch (error) { console.log(error); }
+  }
   const getTagLink = (tagName: string) => {
     let obj = tags.data.find(o => o['tag']['name'] == tagName)
     if (obj) { return obj['link'] }
     else { return false };
   }
 
-  const getTagVal = (tagName: string) => {
-    let obj = tags.data.find(o => o['tag']['name'] == tagName)
-    if (obj) { return Number(obj['val']).toLocaleString(i18n.language); }
-    else { return null };
+  const getTagVal = (tagName: string): string => {
+    let obj = tags.data.find((o: any) => o['tag']['name'] == tagName)
+    if (obj) {
+      if (tagName == 'warpBeamLength' && modeCode.val == 1) {
+        return Number((Number(obj['val']) - (localeParseFloat(getTagVal('picksLastRun')) / (100 * localeParseFloat(getTagVal('planClothDensity')) * (1 - 0.01 * localeParseFloat(getTagVal('warpShrinkage')))))).toFixed(obj['tag']['dec'])).toLocaleString(i18n.language);
+      }
+      else {
+        return Number(obj['val']).toLocaleString(i18n.language);
+      }
+    }
+    else { return '' };
   }
 
   useEffect(() => {
@@ -143,9 +263,11 @@ const Component = (props: any) => {
   }, [shift])
 
   useEffect(() => {
-    fetchTags(['modeCode', 'stopAngle', 'speedMainDrive']);
+    fetchTags(['modeCode', 'warpBeamLength', 'picksLastRun', 'planClothDensity', 'warpShrinkage', 'planSpeedMainDrive', 'fullWarpBeamLength', 'orderLength', 'planOrderLength']);
     fetchStatInfo();
     fetchWeaver();
+    fetchPieces();
+    fetchMachineInfo();
   }, [tags, dayjs().minute()])
 
   useEffect(() => {
@@ -154,45 +276,47 @@ const Component = (props: any) => {
 
   return (
     <>
-    <LoomDetail isModalVisible={isModalVisible} shift={shift} machine={props.machine} tags={tags} modeCode={modeCode} setIsModalVisible={setIsModalVisible} />
-    <Card onClick={()=>{setIsModalVisible(!isModalVisible)}} title={<Space direction="horizontal" style={{ width: '100%', justifyContent: 'space-between' }}><b style={{ fontSize: '150%' }}>{props.machine?.name}</b><span style={{ color: '#FFFFFF93', fontSize: '120%' }}>{stopwatch(modeCode.updated)}</span><span style={{ fontSize: '150%' }}>{modeCodeObj(modeCode.val).icon}</span></Space>} loading={!getTagLink('modeCode')} bordered={false} size='small' style={cardStyle} headStyle={cardHeadStyle} bodyStyle={cardBodyStyle} >
-      <div style={{ display: 'inline-flex', width: '100%', alignItems: 'center', justifyContent: 'center' }}>
-        <div style={{ width: '30%', height: '112px' }}>
-          <Donut data={shiftDonut} selected={shiftDonutSel} text={(Number(Number(shift['efficiency']).toFixed(shift['efficiency'] < 10 ? 2 : 1)).toLocaleString(i18n.language) + t('tags.efficiency.eng'))} />
+      <Card onClick={loomDetail} title={<Space direction="horizontal" style={{ width: '100%', justifyContent: 'space-between' }}><b style={{ fontSize: '150%' }}>{props.machine?.name}</b><span style={{ color: '#FFFFFF93', fontSize: '120%' }}>{stopwatch(modeCode.updated)}</span><span style={{ fontSize: '150%' }}>{modeCodeObj(modeCode.val).icon}</span></Space>} loading={!getTagLink('modeCode')} bordered={false} size='small' style={cardStyle} headStyle={cardHeadStyle} bodyStyle={cardBodyStyle} >
+        <div style={{ display: 'inline-flex', width: '100%', alignItems: 'center', justifyContent: 'center' }}>
+          <div style={{ width: '30%', height: '112px' }}>
+            <Donut data={shiftDonut} selected={shiftDonutSel} text={(Number(Number(shift['efficiency']).toFixed(shift['efficiency'] < 10 ? 2 : 1)).toLocaleString(i18n.language) + t('tags.efficiency.eng'))} />
+          </div>
+          <Form
+            labelCol={{ span: 2 }}
+            wrapperCol={{ span: 22 }}
+            size='small'
+            form={formShift}
+            style={{ width: '70%', marginLeft: 10 }}
+            preserve={false}
+            colon={false}
+          >
+
+
+            {props.period == 'shift' &&
+              <Form.Item label={<ScheduleOutlined style={{ fontSize: '130%', color: '#FFFFFF92' }} />} >
+                <span style={{ fontSize: '18px', color: 'white' }}>{t('shift.shift') + ' ' + shift['name']}</span>
+              </Form.Item>}
+            {props.period == 'day' &&
+              <Form.Item label={<HistoryOutlined style={{ fontSize: '130%', color: '#FFFFFF92' }} />} >
+                <span style={{ fontSize: '18px', color: 'white' }}>{dayjs().format('LL')}</span>
+              </Form.Item>}
+            {props.period == 'month' &&
+              <Form.Item label={<ReconciliationOutlined style={{ fontSize: '130%', color: '#FFFFFF92' }} />} >
+                <span style={{ fontSize: '18px', color: 'white' }}>{dayjs().format('MMMM YYYY')}</span>
+              </Form.Item>}
+            <Form.Item label={<SyncOutlined style={{ fontSize: '130%', color: '#FFFFFF92' }} />}  >
+              <span style={{ fontSize: '18px', color: 'white' }}>{Number(Number(shift['meters']).toFixed(2)).toLocaleString(i18n.language) + ' ' + t('tags.clothMeters.eng')}</span>
+            </Form.Item>
+            <Form.Item label={<DashboardOutlined style={{ fontSize: '130%', color: '#FFFFFF92' }} />} >
+              <span style={{ fontSize: '18px', color: 'white' }}>{Number(Number(shift['rpm']).toFixed(1)).toLocaleString(i18n.language) + ' ' + t('tags.speedMainDrive.eng') + ', ' + Number(Number(shift['mph']).toFixed(2)).toLocaleString(i18n.language) + ' ' + t('tags.speedCloth.eng')}</span>
+            </Form.Item>
+
+            {weaver && <Form.Item label={<UserOutlined style={{ fontSize: '130%', color: '#FFFFFF92' }} />} >
+              <span style={{ fontSize: '18px', color: 'white' }}>{weaver}</span>
+            </Form.Item>}
+          </Form>
         </div>
-        <Form
-          labelCol={{ span: 2 }}
-          wrapperCol={{ span: 22 }}
-          size='small'
-          form={formShift}
-          style={{ width: '70%', marginLeft: 10 }}
-          preserve={false}
-          colon={false}
-        >
-          {props.period == 'shift' &&
-            <Form.Item label={<ScheduleOutlined style={{ fontSize: '130%', color: '#FFFFFF92' }} />} >
-              <span style={{ fontSize: '18px', color: 'white' }}>{t('shift.shift') + ' ' + shift['name']}</span>
-            </Form.Item>}
-          {props.period == 'day' &&
-            <Form.Item label={<HistoryOutlined style={{ fontSize: '130%', color: '#FFFFFF92' }} />} >
-              <span style={{ fontSize: '18px', color: 'white' }}>{dayjs().format('LL')}</span>
-            </Form.Item>}
-          {props.period == 'month' &&
-            <Form.Item label={<ReconciliationOutlined style={{ fontSize: '130%', color: '#FFFFFF92' }} />} >
-              <span style={{ fontSize: '18px', color: 'white' }}>{dayjs().format('MMMM YYYY')}</span>
-            </Form.Item>}
-          <Form.Item label={<SyncOutlined style={{ fontSize: '130%', color: '#FFFFFF92' }} />}  >
-            <span style={{ fontSize: '18px', color: 'white' }}>{Number(Number(shift['meters']).toFixed(2)).toLocaleString(i18n.language) + ' ' + t('tags.clothMeters.eng')}</span>
-          </Form.Item>
-          <Form.Item label={<DashboardOutlined style={{ fontSize: '130%', color: '#FFFFFF92' }} />} >
-            <span style={{ fontSize: '18px', color: 'white' }}>{Number(Number(shift['rpm']).toFixed(1)).toLocaleString(i18n.language) + ' ' + t('tags.speedMainDrive.eng') + ', ' + Number(Number(shift['mph']).toFixed(2)).toLocaleString(i18n.language) + ' ' + t('tags.speedCloth.eng')}</span>
-          </Form.Item>
-          {weaver && <Form.Item label={<UserOutlined style={{ fontSize: '130%', color: '#FFFFFF92' }} />} >
-            <span style={{ fontSize: '18px', color: 'white' }}>{weaver}</span>
-          </Form.Item>}
-        </Form>
-      </div>
-    </Card>
+      </Card>
     </>
   );
 }
