@@ -249,7 +249,9 @@ const Component = (props: any) => {
   }
 
   useEffect(() => {
-    fetchShift();
+    (async () => {
+      await fetchShift();
+    })();
   }, [])
 
   useEffect(() => {
@@ -264,15 +266,39 @@ const Component = (props: any) => {
   }, [shift])
 
   useEffect(() => {
-    fetchTags(['modeCode', 'warpBeamLength', 'picksLastRun', 'planClothDensity', 'warpShrinkage', 'planSpeedMainDrive', 'fullWarpBeamLength', 'orderLength', 'planOrderLength']);
-    fetchStatInfo();
-    fetchWeaver();
-    fetchPieces();
-    fetchMachineInfo();
+    (async () => {
+      await fetchTags(['modeCode', 'warpBeamLength', 'picksLastRun', 'planClothDensity', 'warpShrinkage', 'planSpeedMainDrive', 'fullWarpBeamLength', 'orderLength', 'planOrderLength']);
+    })();
   }, [tags, dayjs().minute()])
 
   useEffect(() => {
-    fetchShift();
+    (async () => {
+      await fetchStatInfo();
+      await fetchWeaver();
+      await fetchPieces();
+      await fetchMachineInfo();
+      await props.onData({
+        loomId: props.machine.id,
+        period: props.period == 'shift' ? t('shift.shift') + ' ' + shift['name'] : props.period == 'month' ? dayjs().format('MMMM YYYY') : dayjs().format('LL'),
+        starttime: props.period == 'shift' ? dayjs(shift['start']).format('LL LT') : props.period == 'month' ? dayjs().startOf('month').format('LL LT') : dayjs().startOf('day').format('LL LT'),
+        endtime: props.period == 'shift' ? dayjs(shift['end']).format('LL LT') : dayjs().format('LL LT'),
+        modeCode: modeCode.val,
+        picks: shift.picks,
+        meters: shift.meters,
+        rpm: shift.rpm,
+        mph: shift.mph,
+        efficiency: shift.efficiency,
+        starts: shift.starts,
+        runtime: shift.runtime,
+        stops: shift.stops
+      });
+    })();
+  }, [modeCode.val])
+
+  useEffect(() => {
+    (async () => {
+      await fetchShift();
+    })();
   }, [shift.end && dayjs().isAfter(shift.end)])
 
   return (
