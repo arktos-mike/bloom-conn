@@ -1,5 +1,5 @@
 import { LoomCard } from '@/components';
-import { Carousel, List, Segmented, Skeleton, Tabs } from 'antd';
+import { Carousel, List, Segmented, Skeleton, Table, Tabs } from 'antd';
 import { ScheduleOutlined, AppstoreOutlined, ReconciliationOutlined, HistoryOutlined } from '@ant-design/icons';
 import React, { useState, useEffect, useRef } from 'react'
 import { useTranslation } from 'react-i18next';
@@ -34,7 +34,7 @@ const Overview: React.FC<Props> = ({
     return {
       label: <><AppstoreOutlined />{group['name']}</>, key: group['id'],
       children:
-        <div style={{ height: height && height - 35, maxHeight: '100%', width: '100%', overflowY: 'auto', overflowX: 'hidden'}}>
+        <div style={{ height: height && height - 35, maxHeight: '100%', width: '100%', overflowY: 'auto', overflowX: 'hidden' }}>
           <List
             grid={{
               gutter: 16,
@@ -85,7 +85,34 @@ const Overview: React.FC<Props> = ({
           <div style={{ ...contentStyle, maxHeight: '100%', overflowY: 'auto' }}>
             <div >
               <Skeleton loading={loading} round active>
-
+                <Table
+                  columns={columns}
+                  dataSource={data}
+                  pagination={false}
+                  scroll={{ x: '100%', y: height ? height - 257 : 0 }}
+                  expandable={{
+                    expandedRowRender: record => <Space direction="horizontal" style={{ width: '100%', justifyContent: 'space-evenly' }}>
+                      {record?.stops.map((stop: any) => (
+                        stop[Object.keys(stop)[0]]['total'] > 0 && <div style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }} key={Object.keys(stop)[0]}><Badge
+                          count={stop[Object.keys(stop)[0]]['total']} overflowCount={999}
+                          style={{ backgroundColor: stopObj(Object.keys(stop)[0]).color, marginRight: '3px' }}
+                        />{stopObj(Object.keys(stop)[0]).icon}{duration2text(dayjs.duration(stop[Object.keys(stop)[0]]['dur']))}</div>))
+                      }
+                    </Space>,
+                    rowExpandable: record => stopsAgg(record?.stops).total > 0,
+                    expandIcon: ({ expanded, onExpand, record }) =>
+                      stopsAgg(record?.stops).total == 0 ? null : expanded ? (
+                        <MinusCircleTwoTone style={{ fontSize: '150%' }} onClick={e => onExpand(record, e)} />
+                      ) : (
+                        <PlusCircleTwoTone style={{ fontSize: '150%' }} onClick={e => onExpand(record, e)} />
+                      )
+                  }}
+                  loading={loading}
+                  rowKey={record => JSON.stringify(record.starttime)}
+                  size='small'
+                  onChange={handleChange}
+                  showSorterTooltip={false}
+                />
               </Skeleton>
             </div>
           </div>

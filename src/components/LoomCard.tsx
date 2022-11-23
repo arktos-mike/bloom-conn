@@ -1,7 +1,7 @@
 import { Badge, Card, Divider, Empty, Form, Modal, Space, Spin } from "antd";
 import { useTranslation } from 'react-i18next';
-import { ToolOutlined, QuestionCircleOutlined, LoadingOutlined, SyncOutlined, DashboardOutlined, ClockCircleOutlined, RiseOutlined, ScheduleOutlined, UserOutlined, ReconciliationOutlined, HistoryOutlined, PieChartOutlined, ShoppingCartOutlined } from '@ant-design/icons';
-import { FabricFullIcon, ButtonIcon, WeftIcon, WarpBeamIcon, FabricPieceLengthIcon, FabricPieceIcon, DensityIcon, SpeedIcon, StatIcon } from '@/components/Icons';
+import { ToolOutlined, QuestionCircleOutlined, LoadingOutlined, SyncOutlined, DashboardOutlined, ClockCircleOutlined, RiseOutlined, ScheduleOutlined, UserOutlined, ReconciliationOutlined, HistoryOutlined, PieChartOutlined, ShoppingCartOutlined, PercentageOutlined } from '@ant-design/icons';
+import { FabricFullIcon, ButtonIcon, WeftIcon, WarpBeamIcon, FabricPieceLengthIcon, FabricPieceIcon, DensityIcon, SpeedIcon } from '@/components/Icons';
 import { useEffect, useState } from "react";
 import dayjs from 'dayjs';
 import duration from 'dayjs/plugin/duration';
@@ -17,7 +17,7 @@ const Component = (props: any) => {
   const [tags, setTags] = useState({ data: [] });
   const [weaver, setWeaver] = useState('');
   const [pieces, setPieces] = useState();
-  const [lifetime, setLifetime] = useState({ type: '', serialno: '', mfgdate: '', picks: 0, cloth: 0, motor: '' });
+  const [lifetime, setLifetime] = useState({ type: '', serialno: '', mfgdate: '', picks: 0, cloth: 0, motor: {} });
   const [shiftDonut, setShiftDonut] = useState([] as any)
   const [shiftDonutSel, setShiftDonutSel] = useState({ run: true, other: true, button: true, warp: true, weft: true, tool: true, fabric: true } as any)
 
@@ -28,15 +28,15 @@ const Component = (props: any) => {
     return (diff.days() > 0 ? diff.days() + t('shift.days') + " " : "") + (diff.hours() > 0 ? diff.hours() + t('shift.hours') + " " : "") + (diff.minutes() > 0 ? diff.minutes() + t('shift.mins') + " " : "") + (diff.seconds() > 0 ? diff.seconds() + t('shift.secs') : "")
   }
 
-  const stopObj = (reason: string, enable: boolean) => {
+  const stopObj = (reason: string) => {
     let obj;
-    if (reason == 'other') { obj = { color: enable ? '#000000FF' : '#8c8c8c', text: t('tags.mode.init'), icon: <QuestionCircleOutlined style={{ fontSize: '130%', color: enable ? '#000000FF' : '#8c8c8c', paddingInline: 5 }} /> } }
-    else if (reason == 'button') { obj = { color: enable ? '#7339ABFF' : '#8c8c8c', text: t('tags.mode.stop'), icon: <ButtonIcon style={{ fontSize: '130%', color: enable ? '#7339ABFF' : '#8c8c8c', paddingInline: 5 }} /> } }
-    else if (reason == 'warp') { obj = { color: enable ? '#FF7F27FF' : '#8c8c8c', text: t('tags.mode.stop'), icon: <WarpBeamIcon style={{ fontSize: '130%', color: enable ? '#FF7F27FF' : '#8c8c8c', paddingInline: 5 }} /> } }
-    else if (reason == 'weft') { obj = { color: enable ? '#FFB300FF' : '#8c8c8c', text: t('tags.mode.stop'), icon: <WeftIcon style={{ fontSize: '130%', color: enable ? '#FFB300FF' : '#8c8c8c', paddingInline: 5 }} /> } }
-    else if (reason == 'tool') { obj = { color: enable ? '#E53935FF' : '#8c8c8c', text: t('tags.mode.stop'), icon: <ToolOutlined style={{ fontSize: '130%', color: enable ? '#E53935FF' : '#8c8c8c', paddingInline: 5 }} /> } }
-    else if (reason == 'fabric') { obj = { color: enable ? '#005498FF' : '#8c8c8c', text: t('tags.mode.stop'), icon: <FabricFullIcon style={{ fontSize: '130%', color: enable ? '#005498FF' : '#8c8c8c', paddingInline: 5 }} /> } }
-    else { obj = { color: enable ? '#00000000' : '#8c8c8c', text: t('tags.mode.unknown'), icon: <QuestionCircleOutlined style={{ fontSize: '130%', color: enable ? '#00000000' : '#8c8c8c', paddingInline: 5 }} /> } }
+    if (reason == 'other') { obj = { color: '#000000FF', text: t('tags.mode.init'), icon: <QuestionCircleOutlined style={{ fontSize: '130%', color: '#000000FF', paddingInline: 5 }} /> } }
+    else if (reason == 'button') { obj = { color: '#7339ABFF', text: t('tags.mode.stop'), icon: <ButtonIcon style={{ fontSize: '130%', color: '#7339ABFF', paddingInline: 5 }} /> } }
+    else if (reason == 'warp') { obj = { color: '#FF7F27FF', text: t('tags.mode.stop'), icon: <WarpBeamIcon style={{ fontSize: '130%', color: '#FF7F27FF', paddingInline: 5 }} /> } }
+    else if (reason == 'weft') { obj = { color: '#FFB300FF', text: t('tags.mode.stop'), icon: <WeftIcon style={{ fontSize: '130%', color: '#FFB300FF', paddingInline: 5 }} /> } }
+    else if (reason == 'tool') { obj = { color: '#E53935FF', text: t('tags.mode.stop'), icon: <ToolOutlined style={{ fontSize: '130%', color: '#E53935FF', paddingInline: 5 }} /> } }
+    else if (reason == 'fabric') { obj = { color: '#005498FF', text: t('tags.mode.stop'), icon: <FabricFullIcon style={{ fontSize: '130%', color: '#005498FF', paddingInline: 5 }} /> } }
+    else { obj = { color: '#00000000', text: t('tags.mode.unknown'), icon: <QuestionCircleOutlined style={{ fontSize: '130%', color: '#00000000', paddingInline: 5 }} /> } }
     return obj;
   }
 
@@ -73,8 +73,9 @@ const Component = (props: any) => {
   }
 
   const loomDetail = () => {
+    Modal.destroyAll();
     Modal.info({
-      title: <span style={{ fontSize: '20px' }}><b>{props.machine.name + (lifetime['type'] && (' ' + lifetime['type'])) + (lifetime['serialno'] && (' #' + lifetime['serialno'])) + ' - ' + props.machine.ip}</b></span>,
+      title: <span style={{ fontSize: '20px' }}><b>{props.machine.name} </b>{lifetime['type'] && <Divider type="vertical" />}{lifetime['type'] && lifetime['type']}{lifetime['serialno'] && <Divider type="vertical" />}{lifetime['serialno'] && ('№' + lifetime['serialno'])}<Divider type="vertical" />{props.machine.ip}</span>,
       centered: true,
       maskClosable: true,
       width: 600,
@@ -109,15 +110,15 @@ const Component = (props: any) => {
             </Form.Item>
             <Form.Item label={<PieChartOutlined style={{ color: '#1890ff', fontSize: '130%' }} />} >
               <Space direction="horizontal" style={{ width: '100%', justifyContent: 'start', alignItems: 'start' }} wrap>
-                {shift['starts'] > 0 && <div onClick={() => setShiftDonutSel({ ...shiftDonutSel, run: !shiftDonutSel.run })} style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }} key={Object.keys(stop)[0]}><Badge size='small'
+                {shift['starts'] > 0 && <div style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }} key={Object.keys(stop)[0]}><Badge size='small'
                   count={shift['starts']} overflowCount={999}
-                  style={{ backgroundColor: shiftDonutSel['run'] ? '#52c41aFF' : '#8c8c8c' }}
-                /><SyncOutlined style={{ fontSize: '130%', color: shiftDonutSel['run'] ? '#52c41aFF' : '#8c8c8c', paddingInline: 5 }} />{duration2text(dayjs.duration(shift['runtime']))}</div>}
+                  style={{ backgroundColor: '#52c41aFF' }}
+                /><SyncOutlined style={{ fontSize: '130%', color: '#52c41aFF', paddingInline: 5 }} />{duration2text(dayjs.duration(shift['runtime']))}</div>}
                 {Array.isArray(shift['stops']) && shift['stops'].map((stop: any) => (
-                  stop[Object.keys(stop)[0]]['total'] > 0 && <div onClick={() => setShiftDonutSel({ ...shiftDonutSel, [Object.keys(stop)[0]]: !shiftDonutSel[Object.keys(stop)[0]] })} style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }} key={Object.keys(stop)[0]}><Badge size='small'
+                  stop[Object.keys(stop)[0]]['total'] > 0 && <div style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }} key={Object.keys(stop)[0]}><Badge size='small'
                     count={stop[Object.keys(stop)[0]]['total']} overflowCount={999}
-                    style={{ backgroundColor: stopObj(Object.keys(stop)[0], shiftDonutSel[Object.keys(stop)[0]]).color }}
-                  />{stopObj(Object.keys(stop)[0], shiftDonutSel[Object.keys(stop)[0]]).icon}{duration2text(dayjs.duration(stop[Object.keys(stop)[0]]['dur']))}</div>))
+                    style={{ backgroundColor: stopObj(Object.keys(stop)[0]).color }}
+                  />{stopObj(Object.keys(stop)[0]).icon}{duration2text(dayjs.duration(stop[Object.keys(stop)[0]]['dur']))}</div>))
                 }
               </Space>
             </Form.Item>
@@ -128,14 +129,14 @@ const Component = (props: any) => {
             <Form.Item label={<SpeedIcon style={{ color: '#1890ff', fontSize: '130%' }} />}>
               <span style={{ fontSize: '18px' }}>{getTagVal('planSpeedMainDrive') + ' ' + t('tags.planSpeedMainDrive.eng')}</span>
             </Form.Item>
-            <Form.Item label={<StatIcon style={{ color: '#1890ff', fontSize: '130%' }} />}>
-              <span style={{ fontSize: '18px' }}>{getTagVal('planSpwarpShrinkageeedMainDrive') + ' ' + t('tags.warpShrinkage.eng')}</span>
+            <Form.Item label={<PercentageOutlined style={{ color: '#1890ff', fontSize: '130%' }} />}>
+              <span style={{ fontSize: '18px' }}>{getTagVal('warpShrinkage') + ' ' + t('tags.warpShrinkage.eng')}</span>
             </Form.Item>
             <Form.Item label={<FabricPieceLengthIcon style={{ color: '#1890ff', fontSize: '130%' }} />}>
               <span style={{ fontSize: '18px' }}>{getTagVal('orderLength') + '/' + getTagVal('planOrderLength') + ' ' + t('tags.orderLength.eng')}</span>
             </Form.Item>
             <Form.Item label={<FabricPieceIcon style={{ color: '#1890ff', fontSize: '130%' }} />}>
-              <span style={{ fontSize: '18px' }}>{pieces + '/' + getTagVal('planOrderLength') != '0' ? Math.floor(localeParseFloat(getTagVal('warpBeamLength')) * (1 - 0.01 * localeParseFloat(getTagVal('warpShrinkage'))) / localeParseFloat(getTagVal('planOrderLength'))) : 0}</span>
+              <span style={{ fontSize: '18px' }}>{pieces + '/'}{getTagVal('planOrderLength') != '0' ? Math.floor(localeParseFloat(getTagVal('warpBeamLength')) * (1 - 0.01 * localeParseFloat(getTagVal('warpShrinkage'))) / localeParseFloat(getTagVal('planOrderLength'))) : 0}</span>
             </Form.Item>
             <Divider orientation="left"><b>{t('panel.lifetime')}</b></Divider>
             <Form.Item label={<ShoppingCartOutlined style={{ color: '#1890ff', fontSize: '130%' }} />} >
@@ -148,7 +149,7 @@ const Component = (props: any) => {
               <span style={{ fontSize: '18px' }}>{lifetime['cloth'] > 0 && (Number(Number(lifetime['cloth']).toFixed(2).toString()).toLocaleString(i18n.language) + ' ' + t('tags.planClothDensity.eng')?.split('/')[1]?.slice(-1))}</span>
             </Form.Item>
             <Form.Item label={<HistoryOutlined style={{ color: '#1890ff', fontSize: '130%' }} />} >
-              <span style={{ fontSize: '18px' }}>{lifetime['motor'] && duration2text(lifetime['motor'])}</span>
+              <span style={{ fontSize: '18px' }}>{lifetime['motor'] && duration2text(dayjs.duration(lifetime['motor']))}</span>
             </Form.Item>
           </Form> : <Empty description={false} />
       ),
