@@ -1,7 +1,7 @@
 import { LoomCard } from '@/components';
 import { Badge, Carousel, List, Segmented, Skeleton, Space, Table, Tabs } from 'antd';
 import type { ColumnsType, TableProps } from 'antd/es/table';
-import { ScheduleOutlined, AppstoreOutlined, ReconciliationOutlined, HistoryOutlined, MinusCircleTwoTone, PlusCircleTwoTone, QuestionCircleOutlined, ToolOutlined } from '@ant-design/icons';
+import { ScheduleOutlined, AppstoreOutlined, ReconciliationOutlined, HistoryOutlined, MinusCircleTwoTone, PlusCircleTwoTone, QuestionCircleOutlined, ToolOutlined, ReloadOutlined, SyncOutlined, LoadingOutlined } from '@ant-design/icons';
 import React, { useState, useEffect, useRef } from 'react'
 import { useTranslation } from 'react-i18next';
 import dayjs from 'dayjs';
@@ -42,14 +42,10 @@ const Overview: React.FC<Props> = ({
     const newData = [...data];
     const index = newData.findIndex(item => record.loomId === item.loomId);
     if (index != -1) {
-      const item = newData[index];
-      newData.splice(index, 1, {
-        ...item,
-        ...record,
-      });
+      newData.splice(index, 1, record);
       setData(newData);
     }
-    else { setData([...data, record]) }
+    else { setData([...newData, record]) }
   }
 
   const items = (groups || []).map(group => {
@@ -100,16 +96,26 @@ const Overview: React.FC<Props> = ({
     return obj;
   }
 
+  const iconMode = (code: Number) => {
+    if (code == 0) { return <LoadingOutlined style={{ fontSize: '175%', color: '#000000', paddingInline: 5 }} /> }
+    if (code == 1) { return <SyncOutlined spin style={{ fontSize: '175%', color: '#52c41a', paddingInline: 5 }} /> }
+    if (code == 2) return stopObj('button').icon
+    if (code == 3) return stopObj('warp').icon
+    if (code == 4) return stopObj('weft').icon
+    if (code == 5) return stopObj('tool').icon
+    if (code == 6) return stopObj('fabric').icon
+    else return stopObj('other').icon
+  }
+
   const duration2text = (diff: any) => {
     if (diff == null) return null
     return (diff.days() > 0 ? diff.days() + t('shift.days') + " " : "") + (diff.hours() > 0 ? diff.hours() + t('shift.hours') + " " : "") + (diff.minutes() > 0 ? diff.minutes() + t('shift.mins') + " " : "") + (diff.seconds() > 0 ? diff.seconds() + t('shift.secs') : "")
   }
 
   const stopsAgg = (stops: any) => {
-
     let dur = dayjs.duration(0)
     let total = 0;
-    (stops||[]).map((part: any) => {
+    Array.isArray(stops) && stops.map((part: any) => {
       if (part[Object.keys(part)[0]].dur != null) {
         dur = dur.add(part[Object.keys(part)[0]].dur)
         total = total + part[Object.keys(part)[0]].total
@@ -145,8 +151,8 @@ const Overview: React.FC<Props> = ({
       dataIndex: 'loomId',
       key: 'loomId',
       ellipsis: true,
-      width: '5%',
-      render: (_, record) => <><b>{(machines || []).filter((item: any) => item.id == record.loomId)[0]['name']}</b><br />{stopObj(record.modeCode.toString()).icon}</>
+      width: '15%',
+      render: (_, record) => <><b>{(machines || []).filter((item: any) => item.id == record.loomId)[0]['name']}</b><br />{iconMode(record.modeCode)}</>
     },
     {
       title: t('report.date'),
@@ -243,7 +249,7 @@ const Overview: React.FC<Props> = ({
               <Skeleton loading={loading} round active>
                 <Table
                   columns={columns}
-                  dataSource={data.filter(item=>item.modeCode>0)}
+                  dataSource={data}
                   pagination={false}
                   scroll={{ x: '100%', y: height ? height - 175 : 0 }}
                   expandable={{
