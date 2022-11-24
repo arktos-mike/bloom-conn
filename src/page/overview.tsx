@@ -106,9 +106,10 @@ const Overview: React.FC<Props> = ({
   }
 
   const stopsAgg = (stops: any) => {
+
     let dur = dayjs.duration(0)
-    let total = 0
-    stops.map((part: any) => {
+    let total = 0;
+    (stops||[]).map((part: any) => {
       if (part[Object.keys(part)[0]].dur != null) {
         dur = dur.add(part[Object.keys(part)[0]].dur)
         total = total + part[Object.keys(part)[0]].total
@@ -145,7 +146,7 @@ const Overview: React.FC<Props> = ({
       key: 'loomId',
       ellipsis: true,
       width: '5%',
-      render: (_, record) => <><b>{(machines || []).filter((item: any) => item.id == record.loomId)[0]['name']}</b><br />{dayjs(record.starttime).format('L LTS')}<br />{dayjs(record.endtime).format('L LTS')}</>
+      render: (_, record) => <><b>{(machines || []).filter((item: any) => item.id == record.loomId)[0]['name']}</b><br />{stopObj(record.modeCode.toString()).icon}</>
     },
     {
       title: t('report.date'),
@@ -153,7 +154,7 @@ const Overview: React.FC<Props> = ({
       key: 'starttime',
       ellipsis: true,
       width: '16%',
-      render: (_, record) => <><b>{record.period}</b><br />{dayjs(record.starttime).format('L LTS')}<br />{dayjs(record.endtime).format('L LTS')}</>
+      render: (_, record) => <><b>{record.period}</b><br />{record.starttime}<br />{record.endtime}</>
     },
     {
       title: t('tags.picks.descr'),

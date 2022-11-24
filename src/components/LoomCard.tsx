@@ -1,7 +1,7 @@
 import { Badge, Card, Divider, Empty, Form, Modal, Space, Spin } from "antd";
 import { useTranslation } from 'react-i18next';
 import { ToolOutlined, QuestionCircleOutlined, LoadingOutlined, SyncOutlined, DashboardOutlined, ClockCircleOutlined, RiseOutlined, ScheduleOutlined, UserOutlined, ReconciliationOutlined, HistoryOutlined, PieChartOutlined, ShoppingCartOutlined, PercentageOutlined } from '@ant-design/icons';
-import { FabricFullIcon, ButtonIcon, WeftIcon, WarpBeamIcon, FabricPieceLengthIcon, FabricPieceIcon, DensityIcon, SpeedIcon } from '@/components/Icons';
+import { FabricFullIcon, ButtonIcon, WeftIcon, WarpBeamIcon, FabricPieceLengthIcon, FabricPieceIcon, DensityIcon, SpeedIcon, WarpBeamsIcon } from '@/components/Icons';
 import { useEffect, useState } from "react";
 import dayjs from 'dayjs';
 import duration from 'dayjs/plugin/duration';
@@ -104,6 +104,9 @@ const Component = (props: any) => {
             </Form.Item>
             <Form.Item label={<SyncOutlined style={{ fontSize: '130%', color: '#1890ff' }} />}  >
               <span style={{ fontSize: '18px' }}>{Number(Number(shift['meters']).toFixed(2)).toLocaleString(i18n.language) + ' ' + t('tags.clothMeters.eng')}</span>
+            </Form.Item>
+            <Form.Item label={<WarpBeamIcon style={{ fontSize: '130%', color: '#1890ff' }} />}  >
+              <span style={{ fontSize: '18px' }}>{getTagVal('warpBeamLength') +'/'+getTagVal('fullWarpBeamLength')+' ' + t('tags.warpBeamLength.eng')}</span>
             </Form.Item>
             <Form.Item label={<DashboardOutlined style={{ fontSize: '130%', color: '#1890ff' }} />} >
               <span style={{ fontSize: '18px' }}>{Number(Number(shift['rpm']).toFixed(1)).toLocaleString(i18n.language) + ' ' + t('tags.speedMainDrive.eng') + ', ' + Number(Number(shift['mph']).toFixed(2)).toLocaleString(i18n.language) + ' ' + t('tags.speedCloth.eng')}</span>
