@@ -1,10 +1,9 @@
-import React, { useState, useEffect, useRef } from 'react'
+import React, { useState, useEffect } from 'react'
 import logo from '/icon.svg'
 import 'styles/app.less'
 import { Route, Link, Routes, useLocation, Navigate } from 'react-router-dom';
-import { Layout, Menu, Select, Drawer, Button, Input, notification, ConfigProvider, Space, Progress, Avatar, Tooltip, Spin, Badge } from 'antd';
-import { BellOutlined, ReconciliationOutlined, TagsOutlined, ReadOutlined, ScheduleOutlined, ToolOutlined, QuestionCircleOutlined, SyncOutlined, LoadingOutlined, AimOutlined, DashboardOutlined, CloseCircleTwoTone, EyeTwoTone, EyeInvisibleOutlined, GlobalOutlined, CloseOutlined, ToTopOutlined, VerticalAlignBottomOutlined, EyeOutlined, TeamOutlined, SettingOutlined, UserOutlined, CaretLeftOutlined, CaretRightOutlined } from '@ant-design/icons';
-import { ButtonIcon, FabricFullIcon, WarpBeamIcon, WeftIcon } from "./components/Icons"
+import { Layout, Menu, Select, Drawer, ConfigProvider} from 'antd';
+import { ReconciliationOutlined, EyeOutlined, SettingOutlined } from '@ant-design/icons';
 
 import Overview from "./page/overview";
 import Settings from "./page/settings";
@@ -24,7 +23,6 @@ dayjs.extend(duration);
 import isBetween from 'dayjs/plugin/isBetween';
 import { Breadcrumb } from './components';
 dayjs.extend(isBetween);
-import { differenceWith, isEqual } from 'lodash-es';
 
 const Store = require('electron-store');
 const store = new Store();
@@ -34,19 +32,6 @@ const { Option } = Select;
 
 const App: React.FC = () => {
   const location = useLocation();
-  const openNotificationWithIcon = (type: string, message: string, dur: number, key?: string, descr?: string, style?: React.CSSProperties) => {
-    if (type == 'success' || type == 'warning' || type == 'info' || type == 'error') {
-      notification[type]({
-        key: key,
-        message: message,
-        description: descr,
-        placement: 'bottomRight',
-        duration: dur,
-        style: style,
-      });
-    }
-  };
-
   const { t, i18n } = useTranslation();
 
   const [today, setDate] = useState(new Date())
@@ -94,6 +79,7 @@ const App: React.FC = () => {
   useEffect(() => {
     clock();
     setUpdated(true);
+    return () => { }
   }, [])
 
   const bigItems = [

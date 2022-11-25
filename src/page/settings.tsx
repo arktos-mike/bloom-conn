@@ -114,15 +114,17 @@ const Settings: React.FC<Props> = ({
     setHeight(div.current?.offsetHeight ? div.current?.offsetHeight : 0)
     setGroups(store.get('groups'));
     setMachines(store.get('machines'));
+    return () => { }
   }, []);
 
   useEffect(() => {
     form.setFieldsValue({ group: groups.length ? Number(groups.slice(-1)[0].id) : null, machines: groups.length ? machines.filter(item => item.groupId == (Number(groups.slice(-1)[0].id))) : null });
+    return () => { }
   }, [form && groups]);
 
   useEffect(() => {
     store.set('groups', groups)
-
+    return () => { }
   }, [groups]);
 
   return (

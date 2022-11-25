@@ -106,7 +106,7 @@ const Component = (props: any) => {
               <span style={{ fontSize: '18px' }}>{Number(Number(shift['meters']).toFixed(2)).toLocaleString(i18n.language) + ' ' + t('tags.clothMeters.eng')}</span>
             </Form.Item>
             <Form.Item label={<WarpBeamIcon style={{ fontSize: '130%', color: '#1890ff' }} />}  >
-              <span style={{ fontSize: '18px' }}>{getTagVal('warpBeamLength') +'/'+getTagVal('fullWarpBeamLength')+' ' + t('tags.warpBeamLength.eng')}</span>
+              <span style={{ fontSize: '18px' }}>{getTagVal('warpBeamLength') + '/' + getTagVal('fullWarpBeamLength') + ' ' + t('tags.warpBeamLength.eng')}</span>
             </Form.Item>
             <Form.Item label={<DashboardOutlined style={{ fontSize: '130%', color: '#1890ff' }} />} >
               <span style={{ fontSize: '18px' }}>{Number(Number(shift['rpm']).toFixed(1)).toLocaleString(i18n.language) + ' ' + t('tags.speedMainDrive.eng') + ', ' + Number(Number(shift['mph']).toFixed(2)).toLocaleString(i18n.language) + ' ' + t('tags.speedCloth.eng')}</span>
@@ -162,11 +162,11 @@ const Component = (props: any) => {
   const fetchShift = async () => {
     try {
       const response = await fetch('http://' + props.machine?.ip + ':3000/shifts/currentshift');
-      if (!response.ok) { throw Error(response.statusText); }
+      if (!response.ok) { /*throw Error(response.statusText);*/ }
       const json = await response.json();
       setShift({ ...shift, name: json[0]['shiftname'], start: json[0]['shiftstart'], end: json[0]['shiftend'], duration: json[0]['shiftdur'] });
     }
-    catch (error) { console.log(error); }
+    catch (error) { /*console.log(error);*/ }
   };
 
   const fetchTags = async (tagNames: string[]) => {
@@ -176,15 +176,17 @@ const Component = (props: any) => {
         headers: { 'content-type': 'application/json;charset=UTF-8', },
         body: JSON.stringify({ name: tagNames }),
       });
-      if (!response.ok) { throw Error(response.statusText); }
-      const json = await response.json();
-      (json || []).map((tag: any) => (
-        tag['val'] = Number(tag['val']).toFixed(tag['tag']['dec']).toString()));
-      setTags({ data: json });
-      let obj = tags.data.find(o => o['tag']['name'] == 'modeCode')
-      obj && setModeCode({ val: obj['val'], updated: dayjs(obj['updated']) })
+      if (!response.ok) { /*throw Error(response.statusText);*/ }
+      else {
+        const json = await response.json();
+        (json || []).map((tag: any) => (
+          tag['val'] = Number(tag['val']).toFixed(tag['tag']['dec']).toString()));
+        setTags({ data: json });
+        let obj = tags.data.find(o => o['tag']['name'] == 'modeCode')
+        obj && setModeCode({ val: Number(obj['val']), updated: dayjs(obj['updated']) })
+      }
     }
-    catch (error) { console.log(error); }
+    catch (error) { /*console.log(error);*/ }
   }
 
   const fetchStatInfo = async () => {
@@ -195,12 +197,12 @@ const Component = (props: any) => {
           headers: { 'content-type': 'application/json;charset=UTF-8', },
           body: JSON.stringify({ start: props.period ? props.period == 'shift' ? shift.start : props.period == 'month' ? dayjs().startOf('month') : dayjs().startOf('day') : dayjs().startOf('day'), end: new Date() }),
         });
-        if (!response.ok) { throw Error(response.statusText); }
+        if (!response.ok) { /*throw Error(response.statusText);*/ }
         const json = await response.json();
         setShift({ ...shift, picks: json[0]['picks'] || 0, meters: json[0]['meters'] || 0, rpm: json[0]['rpm'] || 0, mph: json[0]['mph'] || 0, efficiency: json[0]['efficiency'] || 0, starts: json[0]['starts'] || 0, runtime: json[0]['runtime'] || '', stops: json[0]['stops'] || {} });
       }
     }
-    catch (error) { console.log(error); }
+    catch (error) { /*console.log(error);*/ }
   };
 
   const fetchWeaver = async () => {
@@ -210,27 +212,27 @@ const Component = (props: any) => {
       const json = await ans.json();
       setWeaver(json[0] ? json[0].name : '')
     }
-    catch (error) { console.log(error); }
+    catch (error) { /*console.log(error);*/ }
   }
 
   const fetchPieces = async () => {
     try {
       const response = await fetch('http://' + props.machine?.ip + ':3000/logs/getRolls');
-      if (!response.ok) { throw Error(response.statusText); }
+      if (!response.ok) { /*throw Error(response.statusText);*/ }
       const json = await response.json();
       setPieces(json);
     }
-    catch (error) { console.log(error); }
+    catch (error) { /*console.log(error);*/ }
   }
 
   const fetchMachineInfo = async () => {
     try {
       const response = await fetch('http://' + props.machine?.ip + ':3000/machine');
-      if (!response.ok) { throw Error(response.statusText); }
+      if (!response.ok) { /*throw Error(response.statusText);*/ }
       const json = await response.json();
       setLifetime(json[0]);
     }
-    catch (error) { console.log(error); }
+    catch (error) { /*console.log(error);*/ }
   }
   const getTagLink = (tagName: string) => {
     let obj = tags.data.find(o => o['tag']['name'] == tagName)
@@ -255,6 +257,7 @@ const Component = (props: any) => {
     (async () => {
       await fetchShift();
     })();
+    return () => { }
   }, [])
 
   useEffect(() => {
@@ -266,13 +269,15 @@ const Component = (props: any) => {
       }
       setShiftDonut(obj);
     }
+    return () => { }
   }, [shift])
 
   useEffect(() => {
     (async () => {
       await fetchTags(['modeCode', 'warpBeamLength', 'picksLastRun', 'planClothDensity', 'warpShrinkage', 'planSpeedMainDrive', 'fullWarpBeamLength', 'orderLength', 'planOrderLength']);
     })();
-  }, [tags, dayjs().minute()])
+    return () => { }
+  }, [tags])
 
   useEffect(() => {
     (async () => {
@@ -285,7 +290,7 @@ const Component = (props: any) => {
         period: props.period == 'shift' ? t('shift.shift') + ' ' + shift['name'] : props.period == 'month' ? dayjs().format('MMMM YYYY') : dayjs().format('LL'),
         starttime: props.period == 'shift' ? dayjs(shift['start']).format('LL LT') : props.period == 'month' ? dayjs().startOf('month').format('LL LT') : dayjs().startOf('day').format('LL LT'),
         endtime: props.period == 'shift' ? dayjs(shift['end']).format('LL LT') : dayjs().format('LL LT'),
-        modeCode: modeCode.val,
+        modeCode: modeCode,
         picks: shift.picks,
         meters: shift.meters,
         rpm: shift.rpm,
@@ -296,12 +301,14 @@ const Component = (props: any) => {
         stops: shift.stops
       });
     })();
+    return () => { }
   }, [modeCode.val])
 
   useEffect(() => {
     (async () => {
       await fetchShift();
     })();
+    return () => { }
   }, [shift.end && dayjs().isAfter(shift.end)])
 
   return (

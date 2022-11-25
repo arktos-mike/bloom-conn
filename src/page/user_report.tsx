@@ -1,13 +1,13 @@
-import { Modal, notification, Table, Badge, Space } from 'antd';
-import type { ColumnsType, TablePaginationConfig, TableProps } from 'antd/es/table';
-import { MinusCircleTwoTone, PlusCircleTwoTone, ToolOutlined, QuestionCircleOutlined, SyncOutlined, ExclamationCircleOutlined, DeleteOutlined } from '@ant-design/icons';
+import { Modal, Table, Badge, Space } from 'antd';
+import type { ColumnsType, TableProps } from 'antd/es/table';
+import { MinusCircleTwoTone, PlusCircleTwoTone, ToolOutlined, QuestionCircleOutlined, ExclamationCircleOutlined, DeleteOutlined } from '@ant-design/icons';
 import { ButtonIcon, FabricFullIcon, WarpBeamIcon, WeftIcon } from "../components/Icons"
 import { FilterValue, SorterResult } from 'antd/es/table/interface';
 import React, { useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next';
 import dayjs from 'dayjs';
 import duration from 'dayjs/plugin/duration';
-import { Button, DatePicker, RangePicker, Select } from '@/components';
+import { Button, DatePicker, Select } from '@/components';
 dayjs.extend(duration);
 
 interface DataType {
@@ -40,17 +40,6 @@ const UserReport: React.FC<Props> = ({
   const [sortedInfo, setSortedInfo] = useState<SorterResult<DataType>>({});
   const [height, setHeight] = useState<number | undefined>(0)
   const div = useRef<HTMLDivElement | null>(null);
-
-  const openNotificationWithIcon = (type: string, message: string, dur: number, descr?: string, style?: React.CSSProperties) => {
-    if (type == 'success' || type == 'warning' || type == 'info' || type == 'error')
-      notification[type]({
-        message: message,
-        description: descr,
-        placement: 'bottomRight',
-        duration: dur,
-        style: style,
-      });
-  };
 
   const stopObj = (reason: string) => {
     let obj;
@@ -99,7 +88,6 @@ const UserReport: React.FC<Props> = ({
       onOk: () => { },
     });
   };
-
 
   const columns: ColumnsType<DataType> = [
     {
@@ -186,22 +174,22 @@ const UserReport: React.FC<Props> = ({
           headers: { 'content-type': 'application/json;charset=UTF-8', },
           body: JSON.stringify({ id: user, start: period ? period[0] : dayjs().startOf('month'), end: period ? period[1] : dayjs() }),
         });
-        if (!response.ok) { throw Error(response.statusText); }
+        if (!response.ok) { /*throw Error(response.statusText);*/ }
         const json = await response.json();
         setTotal(json);
       }
     }
-    catch (error) { console.log(error); }
+    catch (error) { /*console.log(error);*/ }
   };
 
   const fetchUsers = async () => {
     try {
       const response = await fetch('http://localhost:3000/users/weavers');
-      if (!response.ok) { throw Error(response.statusText); }
+      if (!response.ok) { /*throw Error(response.statusText);*/ }
       const json = await response.json();
       setUsers(json);
     }
-    catch (error) { console.log(error); }
+    catch (error) { /*console.log(error);*/ }
   };
 
   const fetchData = async () => {
@@ -213,26 +201,29 @@ const UserReport: React.FC<Props> = ({
           headers: { 'content-type': 'application/json;charset=UTF-8', },
           body: JSON.stringify({ id: user, start: period ? period[0] : dayjs().startOf('month'), end: period ? period[1] : dayjs() }),
         });
-        if (!response.ok) { throw Error(response.statusText); }
+        if (!response.ok) { /*throw Error(response.statusText);*/ }
         const json = await response.json();
         setData(json);
         setLoading(false);
       }
     }
-    catch (error) { console.log(error); }
+    catch (error) { /*console.log(error);*/ }
   };
 
   useEffect(() => {
     setHeight(div.current?.offsetHeight ? div.current?.offsetHeight : 0)
+    return () => { }
   }, []);
 
   useEffect(()=>{
     dayjs.locale(i18n.language)
+    return () => { }
   }, [i18n.language])
 
   useEffect(() => {
     fetchStatInfo();
     fetchData();
+    return () => { }
   }, [period, user]);
 
   return (

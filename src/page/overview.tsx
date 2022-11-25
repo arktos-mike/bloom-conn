@@ -1,7 +1,7 @@
 import { LoomCard } from '@/components';
 import { Badge, Carousel, List, Segmented, Skeleton, Space, Table, Tabs } from 'antd';
 import type { ColumnsType, TableProps } from 'antd/es/table';
-import { ScheduleOutlined, AppstoreOutlined, ReconciliationOutlined, HistoryOutlined, MinusCircleTwoTone, PlusCircleTwoTone, QuestionCircleOutlined, ToolOutlined, ReloadOutlined, SyncOutlined, LoadingOutlined } from '@ant-design/icons';
+import { ScheduleOutlined, AppstoreOutlined, ReconciliationOutlined, HistoryOutlined, MinusCircleTwoTone, PlusCircleTwoTone, QuestionCircleOutlined, ToolOutlined, SyncOutlined, LoadingOutlined } from '@ant-design/icons';
 import React, { useState, useEffect, useRef } from 'react'
 import { useTranslation } from 'react-i18next';
 import dayjs from 'dayjs';
@@ -10,10 +10,6 @@ import { ButtonIcon, FabricFullIcon, WarpBeamIcon, WeftIcon } from '@/components
 
 const Store = require('electron-store');
 const store = new Store();
-
-const cardStyle = { background: "whitesmoke", width: '100%', display: 'flex', flexDirection: 'column' as 'column' }
-const cardHeadStyle = { background: "#1890ff", color: "white" }
-const cardBodyStyle = { flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column' as 'column' }
 
 type Props = {
 
@@ -26,26 +22,23 @@ const Overview: React.FC<Props> = ({
   const { t, i18n } = useTranslation();
   const [height, setHeight] = useState<number | undefined>(0)
   const [loading, setLoading] = useState(false)
-  const [data, setData] = useState<DataType[]>([])
-  const [groups, setGroups] = useState()
   const [machines, setMachines] = useState()
+  const [groups, setGroups] = useState()
+  const [data, setData] = useState<DataType[]>([])
   const [period, setPeriod] = useState('shift')
   const [filteredInfo, setFilteredInfo] = useState<Record<string, FilterValue | null>>({});
   const [sortedInfo, setSortedInfo] = useState<SorterResult<DataType>>({});
 
   const div = useRef<HTMLDivElement | null>(null);
   const contentStyle = { height: height, margin: '1px' };
-  let isSubscribed = true;
 
   const handleLoomData = (record: DataType) => {
-    //console.log(record)
-    const newData = [...data];
+    const newData = data;
     const index = newData.findIndex(item => record.loomId === item.loomId);
-    if (index != -1) {
-      newData.splice(index, 1, record);
-      setData(newData);
-    }
-    else { setData([...newData, record]) }
+    newData.splice(index, 1,
+      record);
+    setData([...newData]);
+
   }
 
   const items = (groups || []).map(group => {
@@ -78,10 +71,20 @@ const Overview: React.FC<Props> = ({
     setHeight(div.current?.offsetHeight ? div.current?.offsetHeight : 0)
     setGroups(store.get('groups'))
     setMachines(store.get('machines'))
+    return () => { }
   }, [])
 
   useEffect(() => {
+    let newData: DataType;
+    setData((machines || []).map((item) => {
+      return { ...newData, loomId: item['id'] }
+    }))
+    return () => { }
+  }, [machines && data.length == 0])
+
+  useEffect(() => {
     dayjs.locale(i18n.language)
+    return () => { }
   }, [i18n.language])
 
   const stopObj = (reason: string) => {
@@ -134,7 +137,7 @@ const Overview: React.FC<Props> = ({
     period: any;
     starttime: any;
     endtime: any;
-    modeCode: number;
+    modeCode: any;
     picks: number;
     meters: number;
     rpm: number;
@@ -152,7 +155,7 @@ const Overview: React.FC<Props> = ({
       key: 'loomId',
       ellipsis: true,
       width: '15%',
-      render: (_, record) => <><b>{(machines || []).filter((item: any) => item.id == record.loomId)[0]['name']}</b><br />{iconMode(record.modeCode)}</>
+      render: (_, record) => <><b>{(machines || []).filter((item: any) => item.id == record?.loomId)[0]['name']}</b><br />{iconMode(record?.modeCode?.val)}</>
     },
     {
       title: t('report.date'),
@@ -160,7 +163,7 @@ const Overview: React.FC<Props> = ({
       key: 'starttime',
       ellipsis: true,
       width: '16%',
-      render: (_, record) => <><b>{record.period}</b><br />{record.starttime}<br />{record.endtime}</>
+      render: (_, record) => <><b>{record?.period}</b><br />{record?.starttime}<br />{record?.endtime}</>
     },
     {
       title: t('tags.picks.descr'),
@@ -170,7 +173,7 @@ const Overview: React.FC<Props> = ({
       sortOrder: sortedInfo.columnKey === 'picks' ? sortedInfo.order : null,
       ellipsis: true,
       width: '10%',
-      render: (_, record) => record.picks,
+      render: (_, record) => record?.picks,
     },
     {
       title: t('tags.clothMeters.descr'),
@@ -244,38 +247,36 @@ const Overview: React.FC<Props> = ({
               }} />
             </div></div></div>
         <div>
-          <div style={{ ...contentStyle, maxHeight: '100%', overflowY: 'auto' }}>
+          <div style={{ ...contentStyle, maxHeight: '101%', overflowY: 'auto' }}>
             <div >
-              <Skeleton loading={loading} round active>
-                <Table
-                  columns={columns}
-                  dataSource={data}
-                  pagination={false}
-                  scroll={{ x: '100%', y: height ? height - 175 : 0 }}
-                  expandable={{
-                    expandedRowRender: record => <Space direction="horizontal" style={{ width: '100%', justifyContent: 'space-evenly' }}>
-                      {record?.stops.map((stop: any) => (
-                        stop[Object.keys(stop)[0]]['total'] > 0 && <div style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }} key={Object.keys(stop)[0]}><Badge
-                          count={stop[Object.keys(stop)[0]]['total']} overflowCount={999}
-                          style={{ backgroundColor: stopObj(Object.keys(stop)[0]).color, marginRight: '3px' }}
-                        />{stopObj(Object.keys(stop)[0]).icon}{duration2text(dayjs.duration(stop[Object.keys(stop)[0]]['dur']))}</div>))
-                      }
-                    </Space>,
-                    rowExpandable: record => stopsAgg(record?.stops).total > 0,
-                    expandIcon: ({ expanded, onExpand, record }) =>
-                      stopsAgg(record?.stops).total == 0 ? null : expanded ? (
-                        <MinusCircleTwoTone style={{ fontSize: '150%' }} onClick={e => onExpand(record, e)} />
-                      ) : (
-                        <PlusCircleTwoTone style={{ fontSize: '150%' }} onClick={e => onExpand(record, e)} />
-                      )
-                  }}
-                  loading={loading}
-                  rowKey={record => JSON.stringify(record.starttime)}
-                  size='small'
-                  onChange={handleChange}
-                  showSorterTooltip={false}
-                />
-              </Skeleton>
+              <Table
+                columns={columns}
+                dataSource={data.filter(item=>item.modeCode&&item.starttime)}
+                pagination={false}
+                scroll={{ x: '100%', y: height ? height - 50 : 0 }}
+                expandable={{
+                  expandedRowRender: record => <Space direction="horizontal" style={{ width: '100%', justifyContent: 'space-evenly' }}>
+                    {record?.stops.map((stop: any) => (
+                      stop[Object.keys(stop)[0]]['total'] > 0 && <div style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }} key={Object.keys(stop)[0]}><Badge
+                        count={stop[Object.keys(stop)[0]]['total']} overflowCount={999}
+                        style={{ backgroundColor: stopObj(Object.keys(stop)[0]).color, marginRight: '3px' }}
+                      />{stopObj(Object.keys(stop)[0]).icon}{duration2text(dayjs.duration(stop[Object.keys(stop)[0]]['dur']))}</div>))
+                    }
+                  </Space>,
+                  rowExpandable: record => stopsAgg(record?.stops).total > 0,
+                  expandIcon: ({ expanded, onExpand, record }) =>
+                    stopsAgg(record?.stops).total == 0 ? null : expanded ? (
+                      <MinusCircleTwoTone style={{ fontSize: '150%' }} onClick={e => onExpand(record, e)} />
+                    ) : (
+                      <PlusCircleTwoTone style={{ fontSize: '150%' }} onClick={e => onExpand(record, e)} />
+                    )
+                }}
+                loading={loading}
+                rowKey={record => record.loomId}
+                size='small'
+                onChange={handleChange}
+                showSorterTooltip={false}
+              />
             </div>
           </div>
         </div>

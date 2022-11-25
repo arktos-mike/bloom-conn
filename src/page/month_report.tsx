@@ -377,22 +377,22 @@ const MonthReport: React.FC<Props> = ({
           headers: { 'content-type': 'application/json;charset=UTF-8', },
           body: JSON.stringify({ start: period ? period[0] : dayjs().startOf('month'), end: period ? period[1] : dayjs() }),
         });
-        if (!response.ok) { throw Error(response.statusText); }
+        if (!response.ok) { /*throw Error(response.statusText);*/ }
         const json = await response.json();
         setTotal(json);
       }
     }
-    catch (error) { console.log(error); }
+    catch (error) { /*console.log(error);*/ }
   };
 
   const fetchUsers = async () => {
     try {
       const response = await fetch('http://localhost:3000/users/weavers');
-      if (!response.ok) { throw Error(response.statusText); }
+      if (!response.ok) { /*throw Error(response.statusText);*/ }
       const json = await response.json();
       setUsers(json);
     }
-    catch (error) { console.log(error); }
+    catch (error) { /*console.log(error);*/ }
   };
 
   const fetchData = async () => {
@@ -404,12 +404,12 @@ const MonthReport: React.FC<Props> = ({
           headers: { 'content-type': 'application/json;charset=UTF-8', },
           body: JSON.stringify({ start: period ? period[0] : dayjs().startOf('month'), end: period ? period[1] : dayjs() }),
         });
-        if (!response.ok) { throw Error(response.statusText); }
+        if (!response.ok) { /*throw Error(response.statusText);*/ }
         const json = await response.json();
         setData(json);
       }
     }
-    catch (error) { console.log(error); }
+    catch (error) { /*console.log(error);*/ }
   };
 
   const fetchUserData = async () => {
@@ -421,12 +421,12 @@ const MonthReport: React.FC<Props> = ({
           headers: { 'content-type': 'application/json;charset=UTF-8', },
           body: JSON.stringify({ start: period ? period[0] : dayjs().startOf('month'), end: period ? period[1] : dayjs() }),
         });
-        if (!response.ok) { throw Error(response.statusText); }
+        if (!response.ok) { /*throw Error(response.statusText);*/ }
         const json = await response.json();
         setUserData(json);
       }
     }
-    catch (error) { console.log(error); }
+    catch (error) { /*console.log(error);*/ }
   };
 
   const fetchShiftData = async () => {
@@ -438,22 +438,24 @@ const MonthReport: React.FC<Props> = ({
           headers: { 'content-type': 'application/json;charset=UTF-8', },
           body: JSON.stringify({ start: period ? period[0] : dayjs().startOf('month'), end: period ? period[1] : dayjs() }),
         });
-        if (!response.ok) { throw Error(response.statusText); }
+        if (!response.ok) { /*throw Error(response.statusText);*/ }
         const json = await response.json();
         setShiftData(json);
         setLoading(false);
       }
     }
-    catch (error) { console.log(error); }
+    catch (error) { /*console.log(error);*/ }
   };
 
   useEffect(() => {
     setHeight(div.current?.offsetHeight ? div.current?.offsetHeight : 0)
     fetchUsers();
+    return () => { }
   }, []);
 
   useEffect(() => {
     dayjs.locale(i18n.language)
+    return () => { }
   }, [i18n.language])
 
   useEffect(() => {
@@ -461,6 +463,7 @@ const MonthReport: React.FC<Props> = ({
     fetchData();
     fetchUserData();
     fetchShiftData();
+    return () => { }
   }, [period]);
 
   const items = [
