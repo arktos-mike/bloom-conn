@@ -304,6 +304,32 @@ const Component = (props: any) => {
     return () => { }
   }, [modeCode.val])
 
+
+  useEffect(() => {
+    (async () => {
+      await fetchStatInfo();
+      await fetchWeaver();
+      await fetchPieces();
+      await fetchMachineInfo();
+      await props.onData({
+        loomId: props.machine.id,
+        period: props.period == 'shift' ? t('shift.shift') + ' ' + shift['name'] : props.period == 'month' ? dayjs().format('MMMM YYYY') : dayjs().format('LL'),
+        starttime: props.period == 'shift' ? dayjs(shift['start']).format('LL LT') : props.period == 'month' ? dayjs().startOf('month').format('LL LT') : dayjs().startOf('day').format('LL LT'),
+        endtime: props.period == 'shift' ? dayjs(shift['end']).format('LL LT') : dayjs().format('LL LT'),
+        modeCode: modeCode,
+        picks: shift.picks,
+        meters: shift.meters,
+        rpm: shift.rpm,
+        mph: shift.mph,
+        efficiency: shift.efficiency,
+        starts: shift.starts,
+        runtime: shift.runtime,
+        stops: shift.stops
+      });
+    })();
+    return () => { }
+  }, [modeCode.val==1 && (dayjs().second()% 3 == 0)])
+
   useEffect(() => {
     (async () => {
       await fetchShift();
