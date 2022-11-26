@@ -1,9 +1,9 @@
 import { Input, notification, Spin } from "antd";
-import { useEffect } from "react";
+import { useLayoutEffect } from "react";
 import { useTranslation } from 'react-i18next';
 
 const Component = (props: any) => {
-  useEffect(() => {
+  useLayoutEffect(() => {
     props.onUpdate && props.onUpdate(props.value);
     return () => { }
   }, [props.value]);

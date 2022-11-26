@@ -2,7 +2,7 @@ import { Badge, Card, Divider, Empty, Form, Modal, Space, Spin } from "antd";
 import { useTranslation } from 'react-i18next';
 import { ToolOutlined, QuestionCircleOutlined, LoadingOutlined, SyncOutlined, DashboardOutlined, ClockCircleOutlined, RiseOutlined, ScheduleOutlined, UserOutlined, ReconciliationOutlined, HistoryOutlined, PieChartOutlined, ShoppingCartOutlined, PercentageOutlined } from '@ant-design/icons';
 import { FabricFullIcon, ButtonIcon, WeftIcon, WarpBeamIcon, FabricPieceLengthIcon, FabricPieceIcon, DensityIcon, SpeedIcon, WarpBeamsIcon } from '@/components/Icons';
-import { useEffect, useState } from "react";
+import { useEffect, useLayoutEffect, useState } from "react";
 import dayjs from 'dayjs';
 import duration from 'dayjs/plugin/duration';
 dayjs.extend(duration);
@@ -22,6 +22,10 @@ const Component = (props: any) => {
   const [shiftDonutSel, setShiftDonutSel] = useState({ run: true, other: true, button: true, warp: true, weft: true, tool: true, fabric: true } as any)
 
   const [formShift] = Form.useForm();
+  let controller1: AbortController | null = null;
+  let controller2: AbortController | null = null;
+  let controller3: AbortController | null = null;
+  let controller4: AbortController | null = null;
 
   const stopwatch = (start: any) => {
     let diff = dayjs.duration(dayjs().diff(start))
@@ -190,9 +194,11 @@ const Component = (props: any) => {
   }
 
   const fetchStatInfo = async () => {
+    controller1 = new AbortController();
     try {
       if (shift.start && shift.end) {
         const response = await fetch('http://' + props.machine?.ip + ':3000/shifts/getstatinfo', {
+          signal: controller1.signal,
           method: 'POST',
           headers: { 'content-type': 'application/json;charset=UTF-8', },
           body: JSON.stringify({ start: props.period ? props.period == 'shift' ? shift.start : props.period == 'month' ? dayjs().startOf('month') : dayjs().startOf('day') : dayjs().startOf('day'), end: new Date() }),
@@ -203,36 +209,49 @@ const Component = (props: any) => {
       }
     }
     catch (error) { /*console.log(error);*/ }
+    controller1 = null;
   };
 
   const fetchWeaver = async () => {
+    controller2 = new AbortController();
     try {
-      const ans = await fetch('http://' + props.machine?.ip + ':3000/logs/user');
+      const ans = await fetch('http://' + props.machine?.ip + ':3000/logs/user', {
+        signal: controller2.signal
+      });
       if (!ans.ok) { throw Error(ans.statusText); }
       const json = await ans.json();
       setWeaver(json[0] ? json[0].name : '')
     }
     catch (error) { /*console.log(error);*/ }
+    controller2 = null;
   }
 
   const fetchPieces = async () => {
+    controller3 = new AbortController();
     try {
-      const response = await fetch('http://' + props.machine?.ip + ':3000/logs/getRolls');
+      const response = await fetch('http://' + props.machine?.ip + ':3000/logs/getRolls', {
+        signal: controller3.signal
+      });
       if (!response.ok) { /*throw Error(response.statusText);*/ }
       const json = await response.json();
       setPieces(json);
     }
     catch (error) { /*console.log(error);*/ }
+    controller3 = null;
   }
 
   const fetchMachineInfo = async () => {
+    controller4 = new AbortController();
     try {
-      const response = await fetch('http://' + props.machine?.ip + ':3000/machine');
+      const response = await fetch('http://' + props.machine?.ip + ':3000/machine', {
+        signal: controller4.signal
+      });
       if (!response.ok) { /*throw Error(response.statusText);*/ }
       const json = await response.json();
       setLifetime(json[0]);
     }
     catch (error) { /*console.log(error);*/ }
+    controller4 = null;
   }
   const getTagLink = (tagName: string) => {
     let obj = tags.data.find(o => o['tag']['name'] == tagName)
@@ -253,12 +272,26 @@ const Component = (props: any) => {
     else { return '' };
   }
 
+  useLayoutEffect(() => {
+    (async () => {
+      await fetchTags(['modeCode', 'warpBeamLength', 'picksLastRun', 'planClothDensity', 'warpShrinkage', 'planSpeedMainDrive', 'fullWarpBeamLength', 'orderLength', 'planOrderLength']);
+    })();
+    return () => { }
+  }, [tags])
+
   useEffect(() => {
     (async () => {
       await fetchShift();
     })();
     return () => { }
   }, [])
+
+  useEffect(() => {
+    (async () => {
+      await fetchShift();
+    })();
+    return () => { }
+  }, [shift.end && dayjs().isAfter(shift.end)])
 
   useEffect(() => {
     let obj = []
@@ -274,17 +307,10 @@ const Component = (props: any) => {
 
   useEffect(() => {
     (async () => {
-      await fetchTags(['modeCode', 'warpBeamLength', 'picksLastRun', 'planClothDensity', 'warpShrinkage', 'planSpeedMainDrive', 'fullWarpBeamLength', 'orderLength', 'planOrderLength']);
-    })();
-    return () => { }
-  }, [tags])
-
-  useEffect(() => {
-    (async () => {
-      await fetchStatInfo();
-      await fetchWeaver();
-      await fetchPieces();
-      await fetchMachineInfo();
+      fetchStatInfo();
+      fetchWeaver();
+      fetchPieces();
+      fetchMachineInfo();
       await props.onData({
         loomId: props.machine.id,
         period: props.period == 'shift' ? t('shift.shift') + ' ' + shift['name'] : props.period == 'month' ? dayjs().format('MMMM YYYY') : dayjs().format('LL'),
@@ -301,16 +327,20 @@ const Component = (props: any) => {
         stops: shift.stops
       });
     })();
-    return () => { }
+    return () => {
+      if (controller1) controller1.abort();
+      if (controller2) controller2.abort();
+      if (controller3) controller3.abort();
+      if (controller4) controller4.abort();
+    }
   }, [modeCode.val])
 
-
   useEffect(() => {
     (async () => {
-      await fetchStatInfo();
-      await fetchWeaver();
-      await fetchPieces();
-      await fetchMachineInfo();
+      fetchStatInfo();
+      fetchWeaver();
+      fetchPieces();
+      fetchMachineInfo();
       await props.onData({
         loomId: props.machine.id,
         period: props.period == 'shift' ? t('shift.shift') + ' ' + shift['name'] : props.period == 'month' ? dayjs().format('MMMM YYYY') : dayjs().format('LL'),
@@ -327,15 +357,13 @@ const Component = (props: any) => {
         stops: shift.stops
       });
     })();
-    return () => { }
-  }, [modeCode.val==1 && (dayjs().second()% 3 == 0)])
-
-  useEffect(() => {
-    (async () => {
-      await fetchShift();
-    })();
-    return () => { }
-  }, [shift.end && dayjs().isAfter(shift.end)])
+    return () => {
+      if (controller1) controller1.abort();
+      if (controller2) controller2.abort();
+      if (controller3) controller3.abort();
+      if (controller4) controller4.abort();
+    }
+  }, [modeCode.val == 1 && (dayjs().second() % 3 == 0)])
 
   return (
     <>

@@ -118,14 +118,14 @@ const Settings: React.FC<Props> = ({
   }, []);
 
   useEffect(() => {
-    form.setFieldsValue({ group: groups.length ? Number(groups.slice(-1)[0].id) : null, machines: groups.length ? machines.filter(item => item.groupId == (Number(groups.slice(-1)[0].id))) : null });
-    return () => { }
-  }, [form && groups]);
-
-  useEffect(() => {
     store.set('groups', groups)
     return () => { }
   }, [groups]);
+
+  useEffect(() => {
+    form.setFieldsValue({ group: groups.length ? Number(groups.slice(-1)[0].id) : null, machines: groups.length ? machines.filter(item => item.groupId == (Number(groups.slice(-1)[0].id))) : null });
+    return () => { }
+  }, [form && groups]);
 
   return (
     <div ref={div} className='wrapper'>
