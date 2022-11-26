@@ -240,10 +240,10 @@ const Overview: React.FC<Props> = ({
             <div className='wrapper'>
               <Tabs size='small' type='card' animated={{ inkBar: true, tabPane: true }} items={items} tabBarExtraContent={{
                 right:
-                  <Segmented size='large' value={period} onChange={(value) => { setPeriod(value.toString()); } }
-                  options={[{ label: t('period.shift'), value: 'shift', icon: <ScheduleOutlined /> },
-                  { label: t('period.day'), value: 'day', icon: <HistoryOutlined /> },
-                  { label: t('period.month'), value: 'month', icon: <ReconciliationOutlined /> }]} onResize={undefined} onResizeCapture={undefined} />
+                  <Segmented size='large' value={period} onChange={(value) => { setPeriod(value.toString()); }}
+                    options={[{ label: t('period.shift'), value: 'shift', icon: <ScheduleOutlined /> },
+                    { label: t('period.day'), value: 'day', icon: <HistoryOutlined /> },
+                    { label: t('period.month'), value: 'month', icon: <ReconciliationOutlined /> }]} onResize={undefined} onResizeCapture={undefined} />
               }} />
             </div></div></div>
         <div>
@@ -251,7 +251,7 @@ const Overview: React.FC<Props> = ({
             <div >
               <Table
                 columns={columns}
-                dataSource={data.filter(item=>item.modeCode&&item.starttime)}
+                dataSource={data.filter(item => item.modeCode?.val > 0)}
                 pagination={false}
                 scroll={{ x: '100%', y: height ? height - 50 : 0 }}
                 expandable={{

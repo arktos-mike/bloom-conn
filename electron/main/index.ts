@@ -123,6 +123,13 @@ process.on("uncaughtException", (err) => {
   console.log(err);
 });
 
+ipcMain.on('minimize', () => {
+  win?.minimize()
+})
+
+ipcMain.on('close', () => {
+  win?.close()
+})
 // new window example arg: new windows url
 ipcMain.handle('open-win', (event, arg) => {
   const childWindow = new BrowserWindow({

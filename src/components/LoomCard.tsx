@@ -279,12 +279,23 @@ const Component = (props: any) => {
     return () => { }
   }, [tags])
 
-  useEffect(() => {
-    (async () => {
-      await fetchShift();
-    })();
-    return () => { }
-  }, [])
+  useLayoutEffect(() => {
+    props.onData({
+      loomId: props.machine.id,
+      period: props.period == 'shift' ? t('shift.shift') + ' ' + shift['name'] : props.period == 'month' ? dayjs().format('MMMM YYYY') : dayjs().format('LL'),
+      starttime: props.period == 'shift' ? dayjs(shift['start']).format('LL LT') : props.period == 'month' ? dayjs().startOf('month').format('LL LT') : dayjs().startOf('day').format('LL LT'),
+      endtime: props.period == 'shift' ? dayjs(shift['end']).format('LL LT') : dayjs().format('LL LT'),
+      modeCode: modeCode,
+      picks: shift.picks,
+      meters: shift.meters,
+      rpm: shift.rpm,
+      mph: shift.mph,
+      efficiency: shift.efficiency,
+      starts: shift.starts,
+      runtime: shift.runtime,
+      stops: shift.stops
+    });
+  }, [modeCode.val, shift.picks, shift.stops, shift.starts, shift.efficiency, props.period])
 
   useEffect(() => {
     (async () => {
@@ -303,29 +314,16 @@ const Component = (props: any) => {
       setShiftDonut(obj);
     }
     return () => { }
-  }, [shift])
+  }, [shift.picks, shift.stops, shift.starts, shift.efficiency])
 
   useEffect(() => {
     (async () => {
-      fetchStatInfo();
-      fetchWeaver();
-      fetchPieces();
-      fetchMachineInfo();
-      await props.onData({
-        loomId: props.machine.id,
-        period: props.period == 'shift' ? t('shift.shift') + ' ' + shift['name'] : props.period == 'month' ? dayjs().format('MMMM YYYY') : dayjs().format('LL'),
-        starttime: props.period == 'shift' ? dayjs(shift['start']).format('LL LT') : props.period == 'month' ? dayjs().startOf('month').format('LL LT') : dayjs().startOf('day').format('LL LT'),
-        endtime: props.period == 'shift' ? dayjs(shift['end']).format('LL LT') : dayjs().format('LL LT'),
-        modeCode: modeCode,
-        picks: shift.picks,
-        meters: shift.meters,
-        rpm: shift.rpm,
-        mph: shift.mph,
-        efficiency: shift.efficiency,
-        starts: shift.starts,
-        runtime: shift.runtime,
-        stops: shift.stops
-      });
+      await Promise.all([
+        fetchStatInfo(),
+        fetchWeaver(),
+        fetchPieces(),
+        fetchMachineInfo()
+      ]);
     })();
     return () => {
       if (controller1) controller1.abort();
@@ -333,37 +331,7 @@ const Component = (props: any) => {
       if (controller3) controller3.abort();
       if (controller4) controller4.abort();
     }
-  }, [modeCode.val])
-
-  useEffect(() => {
-    (async () => {
-      fetchStatInfo();
-      fetchWeaver();
-      fetchPieces();
-      fetchMachineInfo();
-      await props.onData({
-        loomId: props.machine.id,
-        period: props.period == 'shift' ? t('shift.shift') + ' ' + shift['name'] : props.period == 'month' ? dayjs().format('MMMM YYYY') : dayjs().format('LL'),
-        starttime: props.period == 'shift' ? dayjs(shift['start']).format('LL LT') : props.period == 'month' ? dayjs().startOf('month').format('LL LT') : dayjs().startOf('day').format('LL LT'),
-        endtime: props.period == 'shift' ? dayjs(shift['end']).format('LL LT') : dayjs().format('LL LT'),
-        modeCode: modeCode,
-        picks: shift.picks,
-        meters: shift.meters,
-        rpm: shift.rpm,
-        mph: shift.mph,
-        efficiency: shift.efficiency,
-        starts: shift.starts,
-        runtime: shift.runtime,
-        stops: shift.stops
-      });
-    })();
-    return () => {
-      if (controller1) controller1.abort();
-      if (controller2) controller2.abort();
-      if (controller3) controller3.abort();
-      if (controller4) controller4.abort();
-    }
-  }, [modeCode.val == 1 && (dayjs().second() % 3 == 0)])
+  }, [modeCode.val, props.period, (modeCode.val == 1) && (dayjs().second() % 5 == 0)])
 
   return (
     <>
@@ -381,8 +349,6 @@ const Component = (props: any) => {
             preserve={false}
             colon={false}
           >
-
-
             {props.period == 'shift' &&
               <Form.Item label={<ScheduleOutlined style={{ fontSize: '130%', color: '#FFFFFF92' }} />} >
                 <span style={{ fontSize: '18px', color: 'white' }}>{t('shift.shift') + ' ' + shift['name']}</span>

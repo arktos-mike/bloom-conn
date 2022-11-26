@@ -2,8 +2,8 @@ import React, { useState, useLayoutEffect } from 'react'
 import logo from '/icon.svg'
 import 'styles/app.less'
 import { Route, Link, Routes, useLocation, Navigate } from 'react-router-dom';
-import { Layout, Menu, Select, Drawer, ConfigProvider} from 'antd';
-import { ReconciliationOutlined, EyeOutlined, SettingOutlined } from '@ant-design/icons';
+import { Layout, Menu, Select, Drawer, ConfigProvider } from 'antd';
+import { ReconciliationOutlined, EyeOutlined, SettingOutlined, CloseOutlined, MinusOutlined } from '@ant-design/icons';
 
 import Overview from "./page/overview";
 import Settings from "./page/settings";
@@ -21,10 +21,12 @@ import dayjs from 'dayjs';
 import duration from 'dayjs/plugin/duration';
 dayjs.extend(duration);
 import isBetween from 'dayjs/plugin/isBetween';
-import { Breadcrumb } from './components';
+import { Breadcrumb, Button } from './components';
 dayjs.extend(isBetween);
+import { ipcRenderer } from 'electron'
 
 const Store = require('electron-store');
+
 const store = new Store();
 
 const { Header, Content, Footer } = Layout;
@@ -96,7 +98,7 @@ const App: React.FC = () => {
             <div className="logo" onClick={showDrawer}>
               <img src={logo} className="applogo" alt=""></img>
             </div>
-            <div className="mode">{t('menu.'+(location.pathname == '/' ? 'title' : location.pathname.split("/").filter((item) => item).slice(-1)[0] ))}</div>
+            <div className="mode">{t('menu.' + (location.pathname == '/' ? 'title' : location.pathname.split("/").filter((item) => item).slice(-1)[0]))}</div>
             <div className="lang">
               <Select value={i18n.language} optionLabelProp="label" onChange={lngChange} size="large" dropdownStyle={{ fontSize: '40px !important' }} dropdownAlign={{ offset: [-40, 4] }} dropdownMatchSelectWidth={false} style={{ color: "white" }} bordered={false} >
                 {(store.get('lngs')).map((lng: string) => (
@@ -108,6 +110,12 @@ const App: React.FC = () => {
             <div className="clock">
               <div className="time">{curTime}</div><div className="date">{curDate}</div>
             </div>
+            <div><Button type="text" style={{ color: '#ffffff' }} onClick={() => {
+              ipcRenderer.send('minimize')
+            }} icon={<MinusOutlined />} /></div>
+            <div><Button confirm type="text" style={{ color: '#ffffff' }} onClick={() => {
+              ipcRenderer.send('close')
+            }} icon={<CloseOutlined />} /></div>
           </Header>
           <div className="site-drawer-render-in-current-wrapper">
             <Content className="content">
