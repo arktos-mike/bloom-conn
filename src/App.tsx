@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useLayoutEffect } from 'react'
 import logo from '/icon.svg'
 import 'styles/app.less'
 import { Route, Link, Routes, useLocation, Navigate } from 'react-router-dom';
@@ -76,7 +76,7 @@ const App: React.FC = () => {
     store.set('lng', lang)
   }
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     clock();
     setUpdated(true);
     return () => { }
