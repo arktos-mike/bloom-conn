@@ -277,7 +277,7 @@ const Component = (props: any) => {
     fetchTags(['modeCode', 'warpBeamLength', 'picksLastRun', 'planClothDensity', 'warpShrinkage', 'planSpeedMainDrive', 'fullWarpBeamLength', 'orderLength', 'planOrderLength']);
     // })();
     return () => { }
-  }, [tags])
+  }, [tags, dayjs().minute()])
 
   useLayoutEffect(() => {
     props.onData({
