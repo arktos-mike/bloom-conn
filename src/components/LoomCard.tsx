@@ -273,9 +273,9 @@ const Component = (props: any) => {
   }
 
   useLayoutEffect(() => {
-    (async () => {
-      await fetchTags(['modeCode', 'warpBeamLength', 'picksLastRun', 'planClothDensity', 'warpShrinkage', 'planSpeedMainDrive', 'fullWarpBeamLength', 'orderLength', 'planOrderLength']);
-    })();
+    // (async () => {
+    fetchTags(['modeCode', 'warpBeamLength', 'picksLastRun', 'planClothDensity', 'warpShrinkage', 'planSpeedMainDrive', 'fullWarpBeamLength', 'orderLength', 'planOrderLength']);
+    // })();
     return () => { }
   }, [tags])
 
@@ -298,9 +298,9 @@ const Component = (props: any) => {
   }, [modeCode.val, shift.picks, shift.stops, shift.starts, shift.efficiency, props.period])
 
   useEffect(() => {
-    (async () => {
-      await fetchShift();
-    })();
+    //   (async () => {
+    fetchShift();
+    //  })();
     return () => { }
   }, [shift.end && dayjs().isAfter(shift.end)])
 
@@ -317,14 +317,14 @@ const Component = (props: any) => {
   }, [shift.picks, shift.stops, shift.starts, shift.efficiency])
 
   useEffect(() => {
-    (async () => {
-      await Promise.all([
-        fetchStatInfo(),
-        fetchWeaver(),
-        fetchPieces(),
-        fetchMachineInfo()
-      ]);
-    })();
+    // (async () => {
+    Promise.all([
+      fetchStatInfo(),
+      fetchWeaver(),
+      fetchPieces(),
+      fetchMachineInfo()
+    ]);
+    // })();
     return () => {
       if (controller1) controller1.abort();
       if (controller2) controller2.abort();
