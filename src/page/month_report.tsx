@@ -1,14 +1,16 @@
-import { Modal, notification, Table, Badge, Space, Tabs } from 'antd';
+import { Modal, notification, Table, Badge, Space, Tabs, Select } from 'antd';
 import type { ColumnsType, TableProps } from 'antd/es/table';
 import { ScheduleOutlined, ReconciliationOutlined, TeamOutlined, MinusCircleTwoTone, PlusCircleTwoTone, ToolOutlined, QuestionCircleOutlined, ExclamationCircleOutlined, DeleteOutlined, BarChartOutlined } from '@ant-design/icons';
 import { ButtonIcon, FabricFullIcon, WarpBeamIcon, WeftIcon } from "../components/Icons"
 import { FilterValue, SorterResult } from 'antd/es/table/interface';
-import React, { useEffect, useRef, useState } from 'react'
+import React, { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next';
 import dayjs from 'dayjs';
 import duration from 'dayjs/plugin/duration';
 import { Button, ColumnPlot, DatePicker, RangePicker } from '@/components';
 dayjs.extend(duration);
+const Store = require('electron-store');
+const store = new Store();
 
 interface DataType {
   starttime: any;
@@ -50,6 +52,18 @@ interface ShiftDataType {
   stops: any;
 }
 
+interface GroupType {
+  id: React.Key;
+  name: string;
+}
+
+interface MachineType {
+  id: React.Key;
+  name: string;
+  ip: string;
+  groupId: React.Key;
+}
+
 type Props = {
 
 };
@@ -66,6 +80,10 @@ const MonthReport: React.FC<Props> = ({
   const [userData, setUserData] = useState();
   const [shiftData, setShiftData] = useState();
   const [loading, setLoading] = useState(false);
+  const [groups, setGroups] = useState<GroupType[]>([]);
+  const [machines, setMachines] = useState<MachineType[]>([]);
+  const [machine, setMachine] = useState()
+  const [group, setGroup] = useState()
   const [filteredInfo, setFilteredInfo] = useState<Record<string, FilterValue | null>>({});
   const [sortedInfo, setSortedInfo] = useState<SorterResult<DataType>>({});
   const [height, setHeight] = useState<number | undefined>(0)
@@ -372,7 +390,7 @@ const MonthReport: React.FC<Props> = ({
     try {
       if (period[0] && period[1]) {
         setLoading(true);
-        const response = await fetch('http://localhost:3000/shifts/getstatinfo', {
+        const response = await fetch('http://' + machines.filter(item => item.id == machine)[0].ip + ':3000/shifts/getstatinfo', {
           method: 'POST',
           headers: { 'content-type': 'application/json;charset=UTF-8', },
           body: JSON.stringify({ start: period ? period[0] : dayjs().startOf('month'), end: period ? period[1] : dayjs() }),
@@ -387,7 +405,7 @@ const MonthReport: React.FC<Props> = ({
 
   const fetchUsers = async () => {
     try {
-      const response = await fetch('http://localhost:3000/users/weavers');
+      const response = await fetch('http://' + machines.filter(item => item.id == machine)[0].ip + ':3000/users/weavers');
       if (!response.ok) { /*throw Error(response.statusText);*/ }
       const json = await response.json();
       setUsers(json);
@@ -399,7 +417,7 @@ const MonthReport: React.FC<Props> = ({
     try {
       if (period[0] && period[1]) {
         setLoading(true);
-        const response = await fetch('http://localhost:3000/reports/monthreport', {
+        const response = await fetch('http://' + machines.filter(item => item.id == machine)[0].ip + ':3000/reports/monthreport', {
           method: 'POST',
           headers: { 'content-type': 'application/json;charset=UTF-8', },
           body: JSON.stringify({ start: period ? period[0] : dayjs().startOf('month'), end: period ? period[1] : dayjs() }),
@@ -416,7 +434,7 @@ const MonthReport: React.FC<Props> = ({
     try {
       if (period[0] && period[1]) {
         setLoading(true);
-        const response = await fetch('http://localhost:3000/reports/usersreport', {
+        const response = await fetch('http://' + machines.filter(item => item.id == machine)[0].ip + ':3000/reports/usersreport', {
           method: 'POST',
           headers: { 'content-type': 'application/json;charset=UTF-8', },
           body: JSON.stringify({ start: period ? period[0] : dayjs().startOf('month'), end: period ? period[1] : dayjs() }),
@@ -433,7 +451,7 @@ const MonthReport: React.FC<Props> = ({
     try {
       if (period[0] && period[1]) {
         setLoading(true);
-        const response = await fetch('http://localhost:3000/reports/shiftsreport', {
+        const response = await fetch('http://' + machines.filter(item => item.id == machine)[0].ip + ':3000/reports/shiftsreport', {
           method: 'POST',
           headers: { 'content-type': 'application/json;charset=UTF-8', },
           body: JSON.stringify({ start: period ? period[0] : dayjs().startOf('month'), end: period ? period[1] : dayjs() }),
@@ -447,11 +465,17 @@ const MonthReport: React.FC<Props> = ({
     catch (error) { /*console.log(error);*/ }
   };
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     setHeight(div.current?.offsetHeight ? div.current?.offsetHeight : 0)
+    setGroups(store.get('groups'))
+    setMachines(store.get('machines'))
+    return () => { }
+  }, [])
+
+  useEffect(() => {
     fetchUsers();
     return () => { }
-  }, []);
+  }, [machine]);
 
   useEffect(() => {
     dayjs.locale(i18n.language)
@@ -459,12 +483,14 @@ const MonthReport: React.FC<Props> = ({
   }, [i18n.language])
 
   useEffect(() => {
-    fetchStatInfo();
-    fetchData();
-    fetchUserData();
-    fetchShiftData();
+    if (machine) {
+      fetchStatInfo();
+      fetchData();
+      fetchUserData();
+      fetchShiftData();
+    }
     return () => { }
-  }, [period]);
+  }, [period, machine]);
 
   const items = [
     {
@@ -609,12 +635,33 @@ const MonthReport: React.FC<Props> = ({
     },
     {
       label: <><BarChartOutlined />{t('tags.efficiency.descr')}</>, key: 'graph', children:
-        <ColumnPlot data={data} />
+        <ColumnPlot data={data} height={height ? height - 125 : 0} />
     },
   ];
   return (
     <div ref={div} className='wrapper'>
-      <div style={{ display: 'inline-flex', width: '100%', alignItems: 'center', justifyContent: 'center' }}><h1 style={{ margin: 10 }}>{t('log.select')}</h1>
+      <div style={{ display: 'inline-flex', width: '100%', alignItems: 'center', justifyContent: 'center' }}>
+        <h1 style={{ margin: 10 }}>{t('group.self') + ':'}</h1>
+        <Select
+          size='large'
+          value={group}
+          defaultActiveFirstOption
+          placeholder={t('group.self')}
+          onChange={(value: any) => { setGroup(value) }}
+          options={
+            (groups || []).map(item => ({ key: item.id, value: item.id, label: item.name }))
+          } />
+        <h1 style={{ margin: 10 }}>{t('machine.self') + ':'}</h1>
+        <Select
+          size='large'
+          value={machine}
+          defaultActiveFirstOption
+          placeholder={t('machine.self')}
+          onChange={(value: any) => { setMachine(value) }}
+          options={
+            (machines.filter(item => item.groupId == group) || []).map(item => ({ key: item.id, value: item.id, label: item.name }))
+          } />
+        <h1 style={{ margin: 10 }}>{t('log.select')}</h1>
         <DatePicker style={{ flexGrow: 1 }} picker="month" format='MMMM YYYY' defaultValue={dayjs()} onChange={(e: any) => { setPeriod([e ? e?.startOf('month') : dayjs().startOf('month'), e ? e?.endOf('month') : dayjs()]) }} />
         {false && <Button shape="circle" icon={<DeleteOutlined />} size="large" type="primary" style={{ margin: 10 }} onClick={confirm} ></Button>}
       </div>

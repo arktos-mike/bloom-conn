@@ -3,12 +3,14 @@ import type { ColumnsType, TableProps } from 'antd/es/table';
 import { MinusCircleTwoTone, PlusCircleTwoTone, ToolOutlined, QuestionCircleOutlined, ExclamationCircleOutlined, DeleteOutlined } from '@ant-design/icons';
 import { ButtonIcon, FabricFullIcon, WarpBeamIcon, WeftIcon } from "../components/Icons"
 import { FilterValue, SorterResult } from 'antd/es/table/interface';
-import React, { useEffect, useRef, useState } from 'react'
+import React, { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next';
 import dayjs from 'dayjs';
 import duration from 'dayjs/plugin/duration';
 import { Button, DatePicker, Select } from '@/components';
 dayjs.extend(duration);
+const Store = require('electron-store');
+const store = new Store();
 
 interface DataType {
   starttime: any;
@@ -21,6 +23,18 @@ interface DataType {
   starts: number;
   runtime: any;
   stops: any;
+}
+
+interface GroupType {
+  id: React.Key;
+  name: string;
+}
+
+interface MachineType {
+  id: React.Key;
+  name: string;
+  ip: string;
+  groupId: React.Key;
 }
 
 type Props = {
@@ -39,6 +53,10 @@ const UserReport: React.FC<Props> = ({
   const [filteredInfo, setFilteredInfo] = useState<Record<string, FilterValue | null>>({});
   const [sortedInfo, setSortedInfo] = useState<SorterResult<DataType>>({});
   const [height, setHeight] = useState<number | undefined>(0)
+  const [groups, setGroups] = useState<GroupType[]>([]);
+  const [machines, setMachines] = useState<MachineType[]>([]);
+  const [machine, setMachine] = useState()
+  const [group, setGroup] = useState()
   const div = useRef<HTMLDivElement | null>(null);
 
   const stopObj = (reason: string) => {
@@ -169,7 +187,7 @@ const UserReport: React.FC<Props> = ({
     try {
       if (user && period[0] && period[1]) {
         setLoading(true);
-        const response = await fetch('http://localhost:3000/shifts/getuserstatinfo', {
+        const response = await fetch('http://' + machines.filter(item => item.id == machine)[0].ip + ':3000/shifts/getuserstatinfo', {
           method: 'POST',
           headers: { 'content-type': 'application/json;charset=UTF-8', },
           body: JSON.stringify({ id: user, start: period ? period[0] : dayjs().startOf('month'), end: period ? period[1] : dayjs() }),
@@ -184,7 +202,7 @@ const UserReport: React.FC<Props> = ({
 
   const fetchUsers = async () => {
     try {
-      const response = await fetch('http://localhost:3000/users/weavers');
+      const response = await fetch('http://' + machines.filter(item => item.id == machine)[0].ip + ':3000/users/weavers');
       if (!response.ok) { /*throw Error(response.statusText);*/ }
       const json = await response.json();
       setUsers(json);
@@ -196,7 +214,7 @@ const UserReport: React.FC<Props> = ({
     try {
       if (user && period[0] && period[1]) {
         setLoading(true);
-        const response = await fetch('http://localhost:3000/reports/userreport', {
+        const response = await fetch('http://' + machines.filter(item => item.id == machine)[0].ip + ':3000/reports/userreport', {
           method: 'POST',
           headers: { 'content-type': 'application/json;charset=UTF-8', },
           body: JSON.stringify({ id: user, start: period ? period[0] : dayjs().startOf('month'), end: period ? period[1] : dayjs() }),
@@ -210,28 +228,58 @@ const UserReport: React.FC<Props> = ({
     catch (error) { /*console.log(error);*/ }
   };
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     setHeight(div.current?.offsetHeight ? div.current?.offsetHeight : 0)
+    setGroups(store.get('groups'))
+    setMachines(store.get('machines'))
     return () => { }
-  }, []);
+  }, [])
 
-  useEffect(()=>{
+  useEffect(() => {
     dayjs.locale(i18n.language)
     return () => { }
   }, [i18n.language])
 
   useEffect(() => {
-    fetchStatInfo();
-    fetchData();
+    fetchUsers();
     return () => { }
-  }, [period, user]);
+  }, [machine]);
+
+  useEffect(() => {
+    if (machine) {
+      fetchStatInfo();
+      fetchData();
+    }
+    return () => { }
+  }, [machine, period, user]);
 
   return (
     <div ref={div} className='wrapper'>
       <div style={{ display: 'inline-flex', width: '100%', alignItems: 'center', justifyContent: 'center' }}>
+        <h1 style={{ margin: 10 }}>{t('group.self') + ':'}</h1>
+        <Select
+          size='large'
+          value={group}
+          defaultActiveFirstOption
+          placeholder={t('group.self')}
+          onChange={(value: any) => { setGroup(value) }}
+          options={
+            (groups || []).map(item => ({ key: item.id, value: item.id, label: item.name }))
+          } />
+        <h1 style={{ margin: 10 }}>{t('machine.self') + ':'}</h1>
+        <Select
+          size='large'
+          value={machine}
+          defaultActiveFirstOption
+          placeholder={t('machine.self')}
+          onChange={(value: any) => { setMachine(value) }}
+          options={
+            (machines.filter(item => item.groupId == group) || []).map(item => ({ key: item.id, value: item.id, label: item.name }))
+          } />
         <h1 style={{ margin: 10 }}>{t('user.weaver')}</h1>
         <Select style={{ width: '100%' }}
           value={user}
+          defaultActiveFirstOption
           onChange={(value: any) => { setUser(value) }}
           options={
             (users || []).map(user => (

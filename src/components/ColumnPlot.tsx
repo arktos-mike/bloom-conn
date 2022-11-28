@@ -1,3 +1,4 @@
+
 import { Column } from '@ant-design/plots';
 import dayjs from 'dayjs';
 import duration from 'dayjs/plugin/duration';
@@ -6,17 +7,18 @@ dayjs.extend(duration);
 import { useTranslation } from 'react-i18next';
 
 const Component: React.FC<any> =
-  ({ data }) => {
+  ({ data, height }) => {
     const [ndata, setNdata] = useState([]);
     const { t, i18n } = useTranslation();
     useEffect(() => {
-      setNdata(data.map(function (obj: any) {
+      setNdata((data||[]).map(function (obj: any) {
         return { starttime: dayjs(obj.starttime).format('LL'), efficiency: obj.efficiency && Number(Number(obj.efficiency).toFixed(2)) };
       }));
     }, [data]);
 
     const config = {
       data: ndata,
+      height: height,
       xField: 'starttime',
       yField: 'efficiency',
       xAxis: {

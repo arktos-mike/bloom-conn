@@ -243,7 +243,7 @@ const Overview: React.FC<Props> = ({
                   <Segmented size='large' value={period} onChange={(value) => { setPeriod(value.toString()); }}
                     options={[{ label: t('period.shift'), value: 'shift', icon: <ScheduleOutlined /> },
                     { label: t('period.day'), value: 'day', icon: <HistoryOutlined /> },
-                    { label: t('period.month'), value: 'month', icon: <ReconciliationOutlined /> }]} onResize={undefined} onResizeCapture={undefined} />
+                    { label: t('period.month'), value: 'month', icon: <ReconciliationOutlined /> }]} />
               }} />
             </div></div></div>
         <div>
