@@ -14,9 +14,9 @@ const Component = (props: any) => {
   const { t, i18n } = useTranslation();
   const [shift, setShift] = useState({ name: '', start: '', end: '', duration: '', picks: 0, meters: 0, rpm: 0, mph: 0, efficiency: 0, starts: 0, runtime: '', stops: {} })
   const [modeCode, setModeCode] = useState({ val: 0, updated: {} });
-  const [tags, setTags] = useState({ data: [] });
+  const [tags, setTags] = useState<any[]>([])
   const [weaver, setWeaver] = useState('');
-  const [pieces, setPieces] = useState();
+  const [pieces, setPieces] = useState<Number>();
   const [lifetime, setLifetime] = useState({ type: '', serialno: '', mfgdate: '', picks: 0, cloth: 0, motor: {} });
   const [shiftDonut, setShiftDonut] = useState([] as any)
   const [shiftDonutSel, setShiftDonutSel] = useState({ run: true, other: true, button: true, warp: true, weft: true, tool: true, fabric: true } as any)
@@ -173,22 +173,18 @@ const Component = (props: any) => {
     catch (error) { /*console.log(error);*/ }
   };
 
-  const fetchTags = async (tagNames: string[]) => {
+  const fetchTags = async () => {
     try {
-      const response = await fetch('http://' + props.machine?.ip + ':3000/tags/filter', {
-        method: 'POST',
-        headers: { 'content-type': 'application/json;charset=UTF-8', },
-        body: JSON.stringify({ name: tagNames }),
-      });
+      const response = await fetch('http://localhost:3000/tags');
       if (!response.ok) { /*throw Error(response.statusText);*/ }
-      else {
-        const json = await response.json();
-        (json || []).map((tag: any) => (
-          tag['val'] = Number(tag['val']).toFixed(tag['tag']['dec']).toString()));
-        setTags({ data: json });
-        let obj = tags.data.find(o => o['tag']['name'] == 'modeCode')
-        obj && setModeCode({ val: Number(obj['val']), updated: dayjs(obj['updated']) })
-      }
+      const json = await response.json();
+      json.map((tag: any) => (
+        tag['val'] = Number(tag['val']).toFixed(tag['tag']['dec']).toString()
+      )
+      );
+      setTags(json);
+      let obj = tags.find(o => o['tag']['name'] == 'modeCode')
+      obj && setModeCode({ val: obj['val'], updated: dayjs(obj['updated']) })
     }
     catch (error) { /*console.log(error);*/ }
   }
@@ -226,20 +222,6 @@ const Component = (props: any) => {
     controller2 = null;
   }
 
-  const fetchPieces = async () => {
-    controller3 = new AbortController();
-    try {
-      const response = await fetch('http://' + props.machine?.ip + ':3000/logs/getRolls', {
-        signal: controller3.signal
-      });
-      if (!response.ok) { /*throw Error(response.statusText);*/ }
-      const json = await response.json();
-      setPieces(json);
-    }
-    catch (error) { /*console.log(error);*/ }
-    controller3 = null;
-  }
-
   const fetchMachineInfo = async () => {
     controller4 = new AbortController();
     try {
@@ -254,13 +236,13 @@ const Component = (props: any) => {
     controller4 = null;
   }
   const getTagLink = (tagName: string) => {
-    let obj = tags.data.find(o => o['tag']['name'] == tagName)
+    let obj = tags.find(o => o['tag']['name'] == tagName)
     if (obj) { return obj['link'] }
     else { return false };
   }
 
   const getTagVal = (tagName: string): string => {
-    let obj = tags.data.find((o: any) => o['tag']['name'] == tagName)
+    let obj = tags.find((o: any) => o['tag']['name'] == tagName)
     if (obj) {
       if (tagName == 'warpBeamLength' && modeCode.val == 1) {
         return Number((Number(obj['val']) - (localeParseFloat(getTagVal('picksLastRun')) / (100 * localeParseFloat(getTagVal('planClothDensity')) * (1 - 0.01 * localeParseFloat(getTagVal('warpShrinkage')))))).toFixed(obj['tag']['dec'])).toLocaleString(i18n.language);
@@ -274,10 +256,10 @@ const Component = (props: any) => {
 
   useLayoutEffect(() => {
     // (async () => {
-    fetchTags(['modeCode', 'warpBeamLength', 'picksLastRun', 'planClothDensity', 'warpShrinkage', 'planSpeedMainDrive', 'fullWarpBeamLength', 'orderLength', 'planOrderLength']);
+    fetchTags();
     // })();
     return () => { }
-  }, [tags, dayjs().minute()])
+  }, [])
 
   useLayoutEffect(() => {
     props.onData({
@@ -296,6 +278,33 @@ const Component = (props: any) => {
       stops: shift.stops
     });
   }, [modeCode.val, shift.picks, shift.stops, shift.starts, shift.efficiency, props.period])
+
+  useLayoutEffect(() => {
+    const source = new EventSource('http://' + props.machine?.ip + ':3000/tags/events');
+    source.addEventListener('tags', (e) => {
+
+      const json = JSON.parse(e.data);
+      if (tags.length > 0) {
+        const updatedTags = tags.map(obj => json.find((o: any) => o['tag']!['name'] === obj['tag']['name']) || obj);
+        updatedTags.map((tag: any) => (
+          tag && (tag['val'] = Number(tag['val']).toFixed(tag['tag']['dec']).toString())
+        ));
+        setTags(updatedTags);
+      }
+      if (e.lastEventId == 'modeCode') {
+        setModeCode({ val: json[0]['val'], updated: dayjs(json[0]['updated']) })
+      }
+    });
+    source.addEventListener('rolls', (e) => {
+      setPieces(parseInt(JSON.parse(e.data)))
+    });
+    source.addEventListener('error', (e) => {
+      // console.error('Error: ',  e);
+    });
+    return () => {
+      source.close();
+    };
+  }, []);
 
   useEffect(() => {
     //   (async () => {
@@ -321,7 +330,6 @@ const Component = (props: any) => {
     Promise.all([
       fetchStatInfo(),
       fetchWeaver(),
-      fetchPieces(),
       fetchMachineInfo()
     ]);
     // })();
