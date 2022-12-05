@@ -1,8 +1,8 @@
 import { LoomCard } from '@/components';
-import { Badge, Carousel, List, Segmented, Skeleton, Space, Table, Tabs } from 'antd';
+import { Badge, Carousel, List, Segmented, Space, Table, Tabs } from 'antd';
 import type { ColumnsType, TableProps } from 'antd/es/table';
 import { ScheduleOutlined, AppstoreOutlined, ReconciliationOutlined, HistoryOutlined, MinusCircleTwoTone, PlusCircleTwoTone, QuestionCircleOutlined, ToolOutlined, SyncOutlined, LoadingOutlined } from '@ant-design/icons';
-import React, { useState, useEffect, useRef, useLayoutEffect } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import { useTranslation } from 'react-i18next';
 import dayjs from 'dayjs';
 import { FilterValue, SorterResult } from 'antd/es/table/interface';
@@ -24,6 +24,7 @@ const Overview: React.FC<Props> = ({
   const [loading, setLoading] = useState(false)
   const [machines, setMachines] = useState()
   const [groups, setGroups] = useState()
+  const [es, setEs] = useState<any>()
   const [data, setData] = useState<DataType[]>([])
   const [period, setPeriod] = useState('shift')
   const [filteredInfo, setFilteredInfo] = useState<Record<string, FilterValue | null>>({});
@@ -67,12 +68,12 @@ const Overview: React.FC<Props> = ({
     }
   })
 
-  useLayoutEffect(() => {
+  useEffect(() => {
     dayjs.locale(i18n.language)
     return () => { }
   }, [i18n.language])
 
-  useLayoutEffect(() => {
+  useEffect(() => {
     setHeight(div.current?.offsetHeight ? div.current?.offsetHeight : 0)
     setGroups(store.get('groups'))
     setMachines(store.get('machines'))
