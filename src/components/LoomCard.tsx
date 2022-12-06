@@ -2,20 +2,20 @@ import { Badge, Card, Divider, Empty, Form, Modal, Space } from "antd";
 import { useTranslation } from 'react-i18next';
 import { ToolOutlined, QuestionCircleOutlined, LoadingOutlined, SyncOutlined, DashboardOutlined, ClockCircleOutlined, RiseOutlined, ScheduleOutlined, UserOutlined, ReconciliationOutlined, HistoryOutlined, PieChartOutlined, ShoppingCartOutlined, PercentageOutlined } from '@ant-design/icons';
 import { FabricFullIcon, ButtonIcon, WeftIcon, WarpBeamIcon, FabricPieceLengthIcon, FabricPieceIcon, DensityIcon, SpeedIcon } from '@/components/Icons';
-import { useEffect, useState } from "react";
+import { memo, useEffect, useState } from "react";
 import dayjs from 'dayjs';
 import duration from 'dayjs/plugin/duration';
 dayjs.extend(duration);
 import isBetween from 'dayjs/plugin/isBetween';
 import Donut from "./Donut";
-import { rest } from "lodash";
+import { isEqual } from "lodash";
 dayjs.extend(isBetween);
 
-const Component = (props: any) => {
+const Component = memo((props: any) => {
   const { t, i18n } = useTranslation();
-  //const [shift, setShift] = useState({ name: '', start: '', end: '', duration: '', picks: 0, meters: 0, rpm: 0, mph: 0, efficiency: 0, starts: 0, runtime: '', stops: {} })
   const [modeCode, setModeCode] = useState<any>();
   const [tags, setTags] = useState<any[]>([])
+  const [link, setLink] = useState(false)
   const [info, setInfo] = useState({
     tags: [],
     shift: { shiftname: '', shiftstart: '', shiftend: '', shiftdur: '' },
@@ -36,10 +36,7 @@ const Component = (props: any) => {
     dayinfo: { start: '', end: '', picks: 0, meters: 0, rpm: 0, mph: 0, efficiency: 0, starts: 0, runtime: { milliseconds: 0, seconds: 0, minutes: 0, hours: 0, days: 0, weeks: 0, months: 0, years: 0 }, stops: {} },
     monthinfo: { start: '', end: '', picks: 0, meters: 0, rpm: 0, mph: 0, efficiency: 0, starts: 0, runtime: { milliseconds: 0, seconds: 0, minutes: 0, hours: 0, days: 0, weeks: 0, months: 0, years: 0 }, stops: {} }
   })
-  //const [weaver, setWeaver] = useState('');
-  //const [pieces, setPieces] = useState<Number>();
   const [periodInfo, setPeriodInfo] = useState<any>((props.period == 'day' || ((!fullinfo?.shift?.shiftstart || !fullinfo?.shift?.shiftend) && props.period == 'shift')) ? { name: dayjs(fullinfo?.dayinfo?.start).format('LL'), start: fullinfo?.dayinfo?.start, end: fullinfo?.dayinfo?.end, duration: '', picks: fullinfo?.dayinfo?.picks, meters: fullinfo?.dayinfo?.meters, rpm: fullinfo?.dayinfo?.rpm, mph: fullinfo?.dayinfo?.mph, efficiency: fullinfo?.dayinfo?.efficiency, starts: fullinfo?.dayinfo?.starts, runtime: fullinfo?.dayinfo?.runtime, stops: fullinfo?.dayinfo?.stops } : (props.period == 'shift') ? { name: t('shift.shift') + ' ' + fullinfo?.shift?.shiftname, start: fullinfo?.shift?.shiftstart, end: fullinfo?.shift?.shiftend, duration: fullinfo?.shift?.shiftdur, picks: fullinfo?.shiftinfo?.picks, meters: fullinfo?.shiftinfo?.meters, rpm: fullinfo?.shiftinfo?.rpm, mph: fullinfo?.shiftinfo?.mph, efficiency: fullinfo?.shiftinfo?.efficiency, starts: fullinfo?.shiftinfo?.starts, runtime: fullinfo?.shiftinfo?.runtime, stops: fullinfo?.shiftinfo?.stops } : (props.period == 'month') ? { name: dayjs(fullinfo?.monthinfo?.start).format('MMMM YYYY'), start: fullinfo?.monthinfo?.start, end: fullinfo?.monthinfo?.end, duration: '', picks: fullinfo?.monthinfo?.picks, meters: fullinfo?.monthinfo?.meters, rpm: fullinfo?.monthinfo?.rpm, mph: fullinfo?.monthinfo?.mph, efficiency: fullinfo?.monthinfo?.efficiency, starts: fullinfo?.monthinfo?.starts, runtime: fullinfo?.monthinfo?.runtime, stops: fullinfo?.monthinfo?.stops } : {})
-  //const [lifetime, setLifetime] = useState({ type: '', serialno: '', mfgdate: '', picks: 0, cloth: 0, motor: {} });
   const [shiftDonut, setShiftDonut] = useState([] as any)
   const [shiftDonutSel, setShiftDonutSel] = useState({ run: true, other: true, button: true, warp: true, weft: true, tool: true, fabric: true } as any)
 
@@ -82,7 +79,7 @@ const Component = (props: any) => {
     else if (code == 4) { obj = { color: '#FFB300FF', colorOp: '#FFB300BB', text: t('tags.mode.stop'), icon: <WeftIcon style={{ fontSize: '150%', paddingInline: 5 }} /> } }
     else if (code == 5) { obj = { color: '#E53935FF', colorOp: '#E53935BB', text: t('tags.mode.stop'), icon: <ToolOutlined style={{ fontSize: '150%', paddingInline: 5 }} /> } }
     else if (code == 6) { obj = { color: '#005498FF', colorOp: '#005498BB', text: t('tags.mode.stop'), icon: <FabricFullIcon style={{ fontSize: '150%', paddingInline: 5 }} /> } }
-    else { obj = { color: '#00000000', text: t('tags.mode.unknown'), icon: <QuestionCircleOutlined style={{ fontSize: '150%', paddingInline: 5 }} /> } }
+    else { obj = { color: '#000000FF', text: t('tags.mode.unknown'), icon: <QuestionCircleOutlined style={{ fontSize: '150%', paddingInline: 5 }} /> } }
     return obj;
   }
 
@@ -209,16 +206,11 @@ const Component = (props: any) => {
       if (!response.ok) { /*throw Error(response.statusText);*/ }
       const json = await response.json();
       setTags(json);
-      let obj = tags.find((o: any) => o['tag']['name'] == 'modeCode')
+      let obj = json.find((o: any) => o['tag']['name'] == 'modeCode')
       obj && setModeCode({ val: obj['val'], updated: dayjs(obj['updated']) })
+      obj && setLink(obj['link']);
     }
     catch (error) { /*console.log(error);*/ }
-  }
-
-  const getTagLink = (tagName: string) => {
-    let obj = tags.find(o => o['tag']['name'] == tagName)
-    if (obj) { return obj['link'] }
-    else { return false };
   }
 
   const getTagVal = (tagName: string): string => {
@@ -235,12 +227,32 @@ const Component = (props: any) => {
   }
 
   useEffect(() => {
-    // (async () => {
-    fetchAll();
-    fetchTags();
-    // })();
+    (async () => {
+      await Promise.all([
+        fetchTags(),
+        fetchAll()
+      ]);
+    })();
     return () => { }
   }, [])
+
+  useEffect(() => {
+
+    return () => { }
+  }, [!link])
+
+  useEffect(() => {
+    (async () => {
+      if (!link) setModeCode({ val: 0, updated: dayjs() })
+      else {
+        await Promise.all([
+          fetchTags(),
+          fetchAll()
+        ]);
+      }
+    })();
+    return () => { }
+  }, [link])
 
   useEffect(() => {
     if (Array.isArray(periodInfo?.stops)) {
@@ -295,6 +307,7 @@ const Component = (props: any) => {
       }
       if (e.lastEventId == 'modeCode') {
         setModeCode({ val: json[0]['val'], updated: dayjs(json[0]['updated']) })
+        setLink(json[0]['link']);
       }
     });
 
@@ -302,7 +315,7 @@ const Component = (props: any) => {
       const json = JSON.parse(e.data);
       setFullInfo(json);
       if (tags.length > 0) {
-        const updatedTags = tags.map(obj => json.find((o: any) => o['tag']!['name'] === obj['tag']['name']) || obj);
+        const updatedTags = tags.map(obj => json.tags.find((o: any) => o['tag']!['name'] === obj['tag']['name']) || obj);
         setTags(updatedTags);
       }
 
@@ -312,10 +325,10 @@ const Component = (props: any) => {
       const json = JSON.parse(e.data);
       setInfo(json);
       if (tags.length > 0) {
-        const updatedTags = tags.map(obj => json.find((o: any) => o['tag']!['name'] === obj['tag']['name']) || obj);
+        const updatedTags = tags.map(obj => json.tags.find((o: any) => o['tag']!['name'] === obj['tag']['name']) || obj);
         setTags(updatedTags);
+        setLink(json.tags[0]['link']);
       }
-
     });
 
     source.addEventListener('rolls', (e) => {
@@ -323,7 +336,8 @@ const Component = (props: any) => {
     });
 
     source.addEventListener('error', (e) => {
-      // console.error('Error: ',  e);
+      //console.error('Error: ',  e);
+      setLink(false);
     });
     return () => {
       source.close();
@@ -332,7 +346,7 @@ const Component = (props: any) => {
 
   return (
     <>
-      <Card onClick={loomDetail} title={<Space direction="horizontal" style={{ width: '100%', justifyContent: 'space-between' }}><b style={{ fontSize: '150%' }}>{props.machine?.name}</b><span style={{ color: '#FFFFFF93', fontSize: '120%' }}>{stopwatch(modeCode?.updated)}</span><span style={{ fontSize: '150%' }}>{modeCodeObj(modeCode?.val).icon}</span></Space>} loading={!getTagLink('modeCode')} bordered={false} size='small' style={cardStyle} headStyle={cardHeadStyle} bodyStyle={cardBodyStyle} >
+      <Card onClick={loomDetail} title={<Space direction="horizontal" style={{ width: '100%', justifyContent: 'space-between' }}><b style={{ fontSize: '150%' }}>{props.machine?.name}</b><span style={{ color: '#FFFFFF93', fontSize: '120%' }}>{stopwatch(modeCode?.updated)}</span><span style={{ fontSize: '150%' }}>{modeCodeObj(modeCode?.val).icon}</span></Space>} loading={!link} bordered={false} size='small' style={cardStyle} headStyle={cardHeadStyle} bodyStyle={cardBodyStyle} >
         <div style={{ display: 'inline-flex', width: '100%', alignItems: 'center', justifyContent: 'center' }}>
           <div style={{ width: '30%', height: '112px' }}>
             <Donut data={shiftDonut} selected={shiftDonutSel} text={(Number(Number(periodInfo?.efficiency).toFixed(periodInfo?.efficiency < 10 ? 2 : 1)).toLocaleString(i18n.language) + t('tags.efficiency.eng'))} />
@@ -364,5 +378,9 @@ const Component = (props: any) => {
       </Card>
     </>
   );
-}
+},
+  (pre, next) => {
+    return isEqual(pre?.period, next?.period);
+  }
+);
 export default Component;
