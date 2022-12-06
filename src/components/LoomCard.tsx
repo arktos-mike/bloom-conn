@@ -104,7 +104,7 @@ const Component = memo((props: any) => {
 
   const loomDetail = () => {
     Modal.destroyAll();
-    Modal.info({
+    const modal = Modal.info({
       title: <span style={{ fontSize: '20px' }}><b>{props.machine.name} </b>{fullinfo?.lifetime?.type && <Divider type="vertical" />}{fullinfo?.lifetime?.type && fullinfo?.lifetime?.type}{fullinfo?.lifetime?.serialno && <Divider type="vertical" />}{fullinfo?.lifetime?.serialno && ('№' + fullinfo?.lifetime?.serialno)}<Divider type="vertical" />{props.machine.ip}</span>,
       centered: true,
       maskClosable: true,
@@ -186,7 +186,9 @@ const Component = memo((props: any) => {
             </Form.Item>
           </Form> : <Empty description={false} />
       ),
-      onOk() { },
+      onOk() {
+        modal.destroy();
+      },
     });
   };
 
