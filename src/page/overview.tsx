@@ -2,11 +2,12 @@ import { LoomCard } from '@/components';
 import { Badge, Carousel, List, Segmented, Space, Table, Tabs } from 'antd';
 import type { ColumnsType, TableProps } from 'antd/es/table';
 import { ScheduleOutlined, AppstoreOutlined, ReconciliationOutlined, HistoryOutlined, MinusCircleTwoTone, PlusCircleTwoTone, QuestionCircleOutlined, ToolOutlined, SyncOutlined, LoadingOutlined } from '@ant-design/icons';
-import React, { useState, useEffect, useRef } from 'react'
+import React, { useState, useEffect, useRef, memo } from 'react'
 import { useTranslation } from 'react-i18next';
 import dayjs from 'dayjs';
 import { FilterValue, SorterResult } from 'antd/es/table/interface';
 import { ButtonIcon, FabricFullIcon, WarpBeamIcon, WeftIcon } from '@/components/Icons';
+import { isEqual } from 'lodash';
 
 const Store = require('electron-store');
 const store = new Store();
@@ -15,7 +16,7 @@ type Props = {
 
 };
 
-const Overview: React.FC<Props> = ({
+const Overview: React.FC<Props> = memo(({
 
 }) => {
 
@@ -284,6 +285,10 @@ const Overview: React.FC<Props> = ({
       </Carousel >
     </div >
   )
-}
+},
+  (pre, next) => {
+    return isEqual(pre, next);
+  }
+);
 
 export default Overview

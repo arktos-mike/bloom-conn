@@ -58,7 +58,8 @@
     }
   },
   "dependencies": {
-    "electron-store": "^8.0.1"
+    "electron-store": "^8.0.1",
+    "react-to-print": "^2.14.10"
   },
   "devDependencies": {
     "@ant-design/charts": "^1.4.2",

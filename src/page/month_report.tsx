@@ -1,6 +1,6 @@
 import { Modal, notification, Table, Badge, Space, Tabs, Select } from 'antd';
 import type { ColumnsType, TableProps } from 'antd/es/table';
-import { ScheduleOutlined, ReconciliationOutlined, TeamOutlined, MinusCircleTwoTone, PlusCircleTwoTone, ToolOutlined, QuestionCircleOutlined, ExclamationCircleOutlined, DeleteOutlined, BarChartOutlined } from '@ant-design/icons';
+import { ScheduleOutlined, ReconciliationOutlined, TeamOutlined, MinusCircleTwoTone, PlusCircleTwoTone, ToolOutlined, QuestionCircleOutlined, ExclamationCircleOutlined, BarChartOutlined, SaveOutlined } from '@ant-design/icons';
 import { ButtonIcon, FabricFullIcon, WarpBeamIcon, WeftIcon } from "../components/Icons"
 import { FilterValue, SorterResult } from 'antd/es/table/interface';
 import React, { memo, useEffect, useLayoutEffect, useRef, useState } from 'react'
@@ -9,6 +9,7 @@ import dayjs from 'dayjs';
 import duration from 'dayjs/plugin/duration';
 import { Button, ColumnPlot, DatePicker, RangePicker } from '@/components';
 import { isEqual } from 'lodash';
+import { useReactToPrint } from 'react-to-print';
 dayjs.extend(duration);
 const Store = require('electron-store');
 const store = new Store();
@@ -89,6 +90,7 @@ const MonthReport: React.FC<Props> = memo(({
   const [sortedInfo, setSortedInfo] = useState<SorterResult<DataType>>({});
   const [height, setHeight] = useState<number | undefined>(0)
   const div = useRef<HTMLDivElement | null>(null);
+  const componentRef = useRef<any>();
 
   const openNotificationWithIcon = (type: string, message: string, dur: number, descr?: string, style?: React.CSSProperties) => {
     if (type == 'success' || type == 'warning' || type == 'info' || type == 'error')
@@ -145,18 +147,13 @@ const MonthReport: React.FC<Props> = memo(({
     setSortedInfo(sorter as SorterResult<DataType>);
   };
 
+  const handlePrint = useReactToPrint({
+    content: () => componentRef.current,
+  });
+
   const confirm = () => {
-    Modal.confirm({
-      title: t('confirm.title'),
-      icon: <ExclamationCircleOutlined style={{ fontSize: "300%" }} />,
-      content: t('confirm.descr'),
-      okText: t('confirm.ok'),
-      cancelText: t('confirm.cancel'),
-      centered: true,
-      okButtonProps: { size: 'large', danger: true },
-      cancelButtonProps: { size: 'large' },
-      onOk: () => { },
-    });
+
+    //saveWorkbook(workbook, t('menu.monthReport') + '_' + groups.filter(i => i.id == group)[0].name + '_' + machines.filter(i => i.id == machine)[0].name + '_' + dayjs(period[0]).format('MMMM YYYY') + '.xlsx');
   };
 
   const shiftColumns: ColumnsType<ShiftDataType> = [
@@ -605,34 +602,36 @@ const MonthReport: React.FC<Props> = memo(({
     },
     {
       label: <><ScheduleOutlined />{t('panel.shifts')}</>, key: 'shifts', children:
-        <Table
-          columns={shiftColumns}
-          dataSource={shiftData}
-          pagination={false}
-          scroll={{ x: '100%', y: height ? height - 175 : 0 }}
-          expandable={{
-            expandedRowRender: record => <Space direction="horizontal" style={{ width: '100%', justifyContent: 'space-evenly' }}>
-              {record?.stops.map((stop: any) => (
-                stop[Object.keys(stop)[0]]['total'] > 0 && <div style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }} key={Object.keys(stop)[0]}><Badge
-                  count={stop[Object.keys(stop)[0]]['total']} overflowCount={999}
-                  style={{ backgroundColor: stopObj(Object.keys(stop)[0]).color, marginRight: '3px' }}
-                />{stopObj(Object.keys(stop)[0]).icon}{duration2text(dayjs.duration(stop[Object.keys(stop)[0]]['dur']))}</div>))
-              }
-            </Space>,
-            rowExpandable: record => stopsAgg(record?.stops).total > 0,
-            expandIcon: ({ expanded, onExpand, record }) =>
-              stopsAgg(record?.stops).total == 0 ? null : expanded ? (
-                <MinusCircleTwoTone style={{ fontSize: '150%' }} onClick={e => onExpand(record, e)} />
-              ) : (
-                <PlusCircleTwoTone style={{ fontSize: '150%' }} onClick={e => onExpand(record, e)} />
-              )
-          }}
-          loading={loading}
-          rowKey={record => JSON.stringify(record.starttime)}
-          size='small'
-          onChange={handleShiftChange}
-          showSorterTooltip={false}
-        />
+        <div ref={componentRef}>
+          <Table
+            columns={shiftColumns}
+            dataSource={shiftData}
+            pagination={false}
+            scroll={{ x: '100%', y: height ? height - 175 : 0 }}
+            expandable={{
+              expandedRowRender: record => <Space direction="horizontal" style={{ width: '100%', justifyContent: 'space-evenly' }}>
+                {record?.stops.map((stop: any) => (
+                  stop[Object.keys(stop)[0]]['total'] > 0 && <div style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }} key={Object.keys(stop)[0]}><Badge
+                    count={stop[Object.keys(stop)[0]]['total']} overflowCount={999}
+                    style={{ backgroundColor: stopObj(Object.keys(stop)[0]).color, marginRight: '3px' }}
+                  />{stopObj(Object.keys(stop)[0]).icon}{duration2text(dayjs.duration(stop[Object.keys(stop)[0]]['dur']))}</div>))
+                }
+              </Space>,
+              rowExpandable: record => stopsAgg(record?.stops).total > 0,
+              expandIcon: ({ expanded, onExpand, record }) =>
+                stopsAgg(record?.stops).total == 0 ? null : expanded ? (
+                  <MinusCircleTwoTone style={{ fontSize: '150%' }} onClick={e => onExpand(record, e)} />
+                ) : (
+                  <PlusCircleTwoTone style={{ fontSize: '150%' }} onClick={e => onExpand(record, e)} />
+                )
+            }}
+            loading={loading}
+            rowKey={record => JSON.stringify(record.starttime)}
+            size='small'
+            onChange={handleShiftChange}
+            showSorterTooltip={false}
+          />
+        </div>
     },
     {
       label: <><BarChartOutlined />{t('tags.efficiency.descr')}</>, key: 'graph', children:
@@ -664,15 +663,15 @@ const MonthReport: React.FC<Props> = memo(({
           } />
         <h1 style={{ margin: 10 }}>{t('log.select')}</h1>
         <DatePicker style={{ flexGrow: 1 }} picker="month" format='MMMM YYYY' defaultValue={dayjs()} onChange={(e: any) => { setPeriod([e ? e?.startOf('month') : dayjs().startOf('month'), e ? e?.endOf('month') : dayjs()]) }} />
-        {false && <Button shape="circle" icon={<DeleteOutlined />} size="large" type="primary" style={{ margin: 10 }} onClick={confirm} ></Button>}
+        <Button shape="circle" icon={<SaveOutlined />} size="large" type="primary" style={{ margin: 10 }} onClick={handlePrint} ></Button>
       </div>
       <Tabs size='small' type='card' animated={{ inkBar: true, tabPane: true }} items={items} />
     </div>
   )
 },
-(pre, next) => {
-  return isEqual(pre, next);
-}
+  (pre, next) => {
+    return isEqual(pre, next);
+  }
 );
 
 export default MonthReport
