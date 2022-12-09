@@ -238,7 +238,18 @@ export function generateHeaders(columns: any[]) {
     return obj;
   });
 }
-
+export function adjustColumnWidth(worksheet: Worksheet) {
+  worksheet.columns.forEach(function (column, i) {
+    var maxLength = 0;
+    column["eachCell"]({ includeEmpty: true }, function (cell) {
+        var columnLength = cell.value ? cell.value.toString().length : 10;
+        if (columnLength > maxLength ) {
+            maxLength = columnLength;
+        }
+    });
+    column.width = maxLength < 10 ? 10 : maxLength;
+});
+}
 export function getColumnNumber(width: number) {
   // 需要的列数，向上取整
   return Math.ceil(width / DEFAULT_COLUMN_WIDTH);

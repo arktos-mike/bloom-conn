@@ -14,6 +14,7 @@ const Store = require('electron-store');
 const store = new Store();
 import * as ExcelJs from 'exceljs';
 import { generateHeaders, saveWorkbook } from "./utils";
+import { adjustColumnWidth } from './utils/excelUtils';
 //import { downloadExcel } from "./utils/excelUtils";
 
 interface DataType {
@@ -152,18 +153,76 @@ const MonthReport: React.FC<Props> = memo(({
     const workbook = new ExcelJs.Workbook();
     const worksheet = workbook.addWorksheet(t('panel.loom'));
     worksheet.properties.defaultRowHeight = 20;
-    worksheet.columns = generateHeaders(columns);
-    worksheet.addRows((data||[]).map((record:any)=>{
-      dayjs(record.starttime).format('LL')
-    }) || []);
+    worksheet.columns =
+      [
+        { header: t('report.date'), key: 'starttime', },
+        { header: t('tags.picks.descr'), key: 'picks', },
+        { header: t('tags.clothMeters.descr') + ", " + t('tags.clothMeters.eng'), key: 'meters', },
+        { header: t('tags.speedMainDrive.descr') + ", " + t('tags.speedMainDrive.eng'), key: 'rpm', },
+        { header: t('tags.speedCloth.descr') + ", " + t('tags.speedCloth.eng'), key: 'mph', },
+        { header: t('tags.efficiency.descr') + ", %", key: 'efficiency', },
+        { header: t('report.starts'), key: 'starts', },
+        { header: t('report.stops'), key: 'stops', },
+      ];
+    worksheet.addRows((data || []).map((record: any) => ({
+      ...record,
+      starttime: dayjs(record?.starttime).format('LL'),
+      meters: record?.meters && (Number(record?.meters).toFixed(2)),
+      rpm: record?.rpm && (Number(record?.rpm).toFixed(1)),
+      mph: record?.mph && (Number(record?.mph).toFixed(2)),
+      efficiency: record?.efficiency && (Number(record?.efficiency).toFixed(2)),
+      starts: record?.runtime && (duration2text(dayjs.duration(record?.runtime)) + ' (' + record?.starts + ')'),
+      stops: record?.stops && (duration2text(stopsAgg(record?.stops).dur) + ' (' + stopsAgg(record?.stops).total + ')')
+    })));
+    adjustColumnWidth(worksheet);
     const worksheet2 = workbook.addWorksheet(t('panel.weavers'));
     worksheet2.properties.defaultRowHeight = 20;
-    worksheet2.columns = generateHeaders(userColumns);
-    worksheet2.addRows(userData || []);
+    worksheet2.columns =
+      [
+        { header: t('user.weaver'), key: 'userid', },
+        { header: t('tags.picks.descr'), key: 'picks', },
+        { header: t('tags.clothMeters.descr') + ", " + t('tags.clothMeters.eng'), key: 'meters', },
+        { header: t('tags.speedMainDrive.descr') + ", " + t('tags.speedMainDrive.eng'), key: 'rpm', },
+        { header: t('tags.speedCloth.descr') + ", " + t('tags.speedCloth.eng'), key: 'mph', },
+        { header: t('tags.efficiency.descr') + ", %", key: 'efficiency', },
+        { header: t('report.starts'), key: 'starts', },
+        { header: t('report.stops'), key: 'stops', },
+      ];
+    worksheet2.addRows((userData || []).map((record: any) => ({
+      ...record,
+      userid: (users.filter((item: any) => item.id == record.userid))[0]['name'] + ' (' + period[0] && dayjs(period[0]).format('MMMM YYYY') + ' - ' + duration2text(dayjs.duration(record.workdur)) + ')',
+      meters: record?.meters && (Number(record?.meters).toFixed(2)),
+      rpm: record?.rpm && (Number(record?.rpm).toFixed(1)),
+      mph: record?.mph && (Number(record?.mph).toFixed(2)),
+      efficiency: record?.efficiency && (Number(record?.efficiency).toFixed(2)),
+      starts: record?.runtime && (duration2text(dayjs.duration(record?.runtime)) + ' (' + record?.starts + ')'),
+      stops: record?.stops && (duration2text(stopsAgg(record?.stops).dur) + ' (' + stopsAgg(record?.stops).total + ')')
+    })));
+    adjustColumnWidth(worksheet2);
     const worksheet3 = workbook.addWorksheet(t('panel.shifts'));
     worksheet3.properties.defaultRowHeight = 20;
-    worksheet3.columns = generateHeaders(shiftColumns);
-    worksheet3.addRows(shiftData || []);
+    worksheet3.columns =
+      [
+        { header: t('shift.shift'), key: 'shiftname', },
+        { header: t('tags.picks.descr'), key: 'picks', },
+        { header: t('tags.clothMeters.descr') + ", " + t('tags.clothMeters.eng'), key: 'meters', },
+        { header: t('tags.speedMainDrive.descr') + ", " + t('tags.speedMainDrive.eng'), key: 'rpm', },
+        { header: t('tags.speedCloth.descr') + ", " + t('tags.speedCloth.eng'), key: 'mph', },
+        { header: t('tags.efficiency.descr') + ", %", key: 'efficiency', },
+        { header: t('report.starts'), key: 'starts', },
+        { header: t('report.stops'), key: 'stops', },
+      ];
+    worksheet3.addRows((shiftData || []).map((record: any) => ({
+      ...record,
+      shiftname: t('shift.shift') + ' ' + record.shiftname + ' (' + dayjs(record.starttime).format('L LTS') + ' - ' + dayjs(record.endtime).format('L LTS') + ')',
+      meters: record?.meters && (Number(record?.meters).toFixed(2)),
+      rpm: record?.rpm && (Number(record?.rpm).toFixed(1)),
+      mph: record?.mph && (Number(record?.mph).toFixed(2)),
+      efficiency: record?.efficiency && (Number(record?.efficiency).toFixed(2)),
+      starts: record?.runtime && (duration2text(dayjs.duration(record?.runtime)) + ' (' + record?.starts + ')'),
+      stops: record?.stops && (duration2text(stopsAgg(record?.stops).dur) + ' (' + stopsAgg(record?.stops).total + ')')
+    })));
+    adjustColumnWidth(worksheet3);
     saveWorkbook(workbook, t('menu.monthReport') + '_' + groups.filter(i => i.id == group)[0].name + '_' + machines.filter(i => i.id == machine)[0].name + '_' + dayjs(period[0]).format('MMMM YYYY') + '.xlsx');
   };
 
@@ -473,22 +532,11 @@ const MonthReport: React.FC<Props> = memo(({
     }
     catch (error) { /*console.log(error);*/ }
   };
-  let x = 20
-  const sqrtinf = (y: number): number => {
-    return x + Math.sqrt(y)
-  };
 
   useLayoutEffect(() => {
     setHeight(div.current?.offsetHeight ? div.current?.offsetHeight : 0)
     setGroups(store.get('groups'))
     setMachines(store.get('machines'))
-    let z = sqrtinf(x)
-    console.log('0: ' + z)
-    for (let index = 1; index < 11; index++) {
-      z = sqrtinf(z)
-    }
-    console.log(Math.sqrt(z))
-
     return () => { }
   }, [])
 
@@ -500,7 +548,7 @@ const MonthReport: React.FC<Props> = memo(({
   useEffect(() => {
     dayjs.locale(i18n.language)
     return () => { }
-  }, [i18n.language])
+  }, [i18n.language, machine])
 
   useEffect(() => {
     if (machine) {
