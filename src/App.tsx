@@ -1,4 +1,4 @@
-import React, { useState, useLayoutEffect, memo } from 'react'
+import React, { useState, useLayoutEffect } from 'react'
 import logo from '/icon.svg'
 import 'styles/app.less'
 import { Route, Link, Routes, useLocation, Navigate } from 'react-router-dom';
@@ -24,7 +24,6 @@ import isBetween from 'dayjs/plugin/isBetween';
 import { Breadcrumb, Button } from './components';
 dayjs.extend(isBetween);
 import { ipcRenderer } from 'electron'
-import { isEqual } from 'lodash';
 
 const Store = require('electron-store');
 
@@ -33,7 +32,7 @@ const store = new Store();
 const { Header, Content, Footer } = Layout;
 const { Option } = Select;
 
-const App: React.FC = memo(() => {
+const App: React.FC = () => {
   const location = useLocation();
   const { t, i18n } = useTranslation();
 
@@ -152,10 +151,6 @@ const App: React.FC = memo(() => {
       </ConfigProvider>
     </div >
   )
-},
-  (pre, next) => {
-    return isEqual(pre, next);
-  }
-);
+}
 
 export default App

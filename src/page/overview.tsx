@@ -7,7 +7,6 @@ import { useTranslation } from 'react-i18next';
 import dayjs from 'dayjs';
 import { FilterValue, SorterResult } from 'antd/es/table/interface';
 import { ButtonIcon, FabricFullIcon, WarpBeamIcon, WeftIcon } from '@/components/Icons';
-import { isEqual } from 'lodash';
 
 const Store = require('electron-store');
 const store = new Store();
@@ -286,9 +285,7 @@ const Overview: React.FC<Props> = memo(({
     </div >
   )
 },
-  (pre, next) => {
-    return isEqual(pre, next);
-  }
+  (pre, next) => true
 );
 
 export default Overview
