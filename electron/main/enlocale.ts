@@ -22,6 +22,14 @@ const locale = {
     "settingsDev": "DATA AQUISITION",
     "settingsTech": "TECHNOLOGY"
   },
+  "stop": {
+    "other": "other",
+    "button": "normal stop via button",
+    "warp": "warp breakage",
+    "weft": "weft breakage",
+    "tool": "equipment fault",
+    "fabric": "fabric roll production"
+  },
   "shift": {
     "shift": "Shift",
     "days": "d",

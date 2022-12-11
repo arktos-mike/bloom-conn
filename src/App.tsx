@@ -1,4 +1,4 @@
-import React, { useState, useLayoutEffect } from 'react'
+import React, { useState, useLayoutEffect, memo } from 'react'
 import logo from '/icon.svg'
 import 'styles/app.less'
 import { Route, Link, Routes, useLocation, Navigate } from 'react-router-dom';
@@ -32,7 +32,7 @@ const store = new Store();
 const { Header, Content, Footer } = Layout;
 const { Option } = Select;
 
-const App: React.FC = () => {
+const App: React.FC = memo(() => {
   const location = useLocation();
   const { t, i18n } = useTranslation();
 
@@ -151,6 +151,8 @@ const App: React.FC = () => {
       </ConfigProvider>
     </div >
   )
-}
+},
+(pre, next) => true
+);
 
 export default App
