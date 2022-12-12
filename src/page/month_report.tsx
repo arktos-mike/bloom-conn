@@ -14,8 +14,7 @@ const Store = require('electron-store');
 const store = new Store();
 import * as ExcelJs from 'exceljs';
 import { saveWorkbook } from "./utils";
-import { adjustColumnWidth } from './utils/excelUtils';
-//import { downloadExcel } from "./utils/excelUtils";
+import { addTitle, adjustColumnWidth } from './utils/excelUtils';
 
 interface DataType {
   starttime: any;
@@ -178,6 +177,15 @@ const MonthReport: React.FC<Props> = memo(({
         { header: t('stop.other'), key: 'stopso', },
         { header: t('stop.other') + ", " + t('shift.hours'), key: 'stopsoh', },
       ];
+    worksheet.duplicateRow(1, 4, true);
+    addTitle(worksheet, t('menu.monthReport') + ' ' + groups.filter(i => i.id == group)[0].name + ' ' + machines.filter(i => i.id == machine)[0].name, dayjs(period[0]).format('MMMM YYYY'))
+    worksheet.getRow(5).font = { name: 'PTSans', family: 4, size: 9, bold: true }
+    worksheet.getRow(5).eachCell((cell, number) => {
+      cell.fill = {
+        type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFececec' }
+      }
+      cell.border = { top: { style: 'thin' }, left: { style: 'thin' }, bottom: { style: 'thin' }, right: { style: 'thin' } }
+    })
     worksheet.addRows((data || []).map((record: any) => ({
       ...record,
       starttime: dayjs(record?.starttime).format('LL'),
@@ -203,6 +211,31 @@ const MonthReport: React.FC<Props> = memo(({
       stopso: record?.stops.filter((stop: any) => stop?.other?.total)[0] && (Number(record?.stops.filter((stop: any) => stop?.other?.total)[0]?.other.total)),
       stopsoh: record?.stops.filter((stop: any) => stop?.other?.total)[0] && (Number(dayjs.duration((record?.stops.filter((stop: any) => stop?.other?.total))[0]?.other.dur).asHours().toFixed(1)))
     })));
+    worksheet.addRow({
+      starttime: period[0] && dayjs(period[0]).format('MMMM YYYY'),
+      picks: total && total[0] && total[0]['picks'] && (Number(total && total[0] && total[0]['picks'])),
+      meters: total && total[0] && total[0]['meters'] && (Number(Number(total && total[0] && total[0]['meters']).toFixed(2))),
+      rpm: total && total[0] && total[0]['rpm'] && (Number(Number(total && total[0] && total[0]['rpm']).toFixed(1))),
+      mph: total && total[0] && total[0]['mph'] && (Number(Number(total && total[0] && total[0]['mph']).toFixed(2))),
+      efficiency: total && total[0] && total[0]['efficiency'] && (Number(Number(total && total[0] && total[0]['efficiency']).toFixed(2))),
+      starts: total && total[0] && total[0]['runtime'] && (Number(total && total[0] && total[0]['starts'])),
+      startsh: total && total[0] && total[0]['runtime'] && (Number(dayjs.duration(total && total[0] && total[0]['runtime']).asHours().toFixed(1))),
+      stops: total && total[0] && total[0]['stops'] && (Number(stopsAgg(total && total[0] && total[0]['stops']).total)),
+      stopsh: total && total[0] && total[0]['stops'] && (Number(stopsAgg(total && total[0] && total[0]['stops']).dur.asHours().toFixed(1))),
+      stopsb: total && total[0] && (total[0]['stops'] as []).filter((stop: any) => stop?.button?.total)[0] && (Number(total && total[0] && (total[0]['stops'] as []).filter((stop: any) => stop?.button?.total)[0]['button']['total'])),
+      stopsbh: total && total[0] && (total[0]['stops'] as []).filter((stop: any) => stop?.button?.total)[0] && (Number(dayjs.duration((total && total[0] && (total[0]['stops'] as []).filter((stop: any) => stop?.button?.total))[0]['button']['dur']).asHours().toFixed(1))),
+      stopswa: total && total[0] && (total[0]['stops'] as []).filter((stop: any) => stop?.warp?.total)[0] && (Number(total && total[0] && (total[0]['stops'] as []).filter((stop: any) => stop?.warp?.total)[0]['warp']['total'])),
+      stopswah: total && total[0] && (total[0]['stops'] as []).filter((stop: any) => stop?.warp?.total)[0] && (Number(dayjs.duration((total && total[0] && (total[0]['stops'] as []).filter((stop: any) => stop?.warp?.total))[0]['warp']['dur']).asHours().toFixed(1))),
+      stopswe: total && total[0] && (total[0]['stops'] as []).filter((stop: any) => stop?.weft?.total)[0] && (Number(total && total[0] && (total[0]['stops'] as []).filter((stop: any) => stop?.weft?.total)[0]['weft']['total'])),
+      stopsweh: total && total[0] && (total[0]['stops'] as []).filter((stop: any) => stop?.weft?.total)[0] && (Number(dayjs.duration((total && total[0] && (total[0]['stops'] as []).filter((stop: any) => stop?.weft?.total))[0]['weft']['dur']).asHours().toFixed(1))),
+      stopst: total && total[0] && (total[0]['stops'] as []).filter((stop: any) => stop?.tool?.total)[0] && (Number(total && total[0] && (total[0]['stops'] as []).filter((stop: any) => stop?.tool?.total)[0]['tool']['total'])),
+      stopsth: total && total[0] && (total[0]['stops'] as []).filter((stop: any) => stop?.tool?.total)[0] && (Number(dayjs.duration((total && total[0] && (total[0]['stops'] as []).filter((stop: any) => stop?.tool?.total))[0]['tool']['dur']).asHours().toFixed(1))),
+      stopsf: total && total[0] && (total[0]['stops'] as []).filter((stop: any) => stop?.fabric?.total)[0] && (Number(total && total[0] && (total[0]['stops'] as []).filter((stop: any) => stop?.fabric?.total)[0]['fabric']['total'])),
+      stopsfh: total && total[0] && (total[0]['stops'] as []).filter((stop: any) => stop?.fabric?.total)[0] && (Number(dayjs.duration((total && total[0] && (total[0]['stops'] as []).filter((stop: any) => stop?.fabric?.total))[0]['fabric']['dur']).asHours().toFixed(1))),
+      stopso: total && total[0] && (total[0]['stops'] as []).filter((stop: any) => stop?.other?.total)[0] && (Number(total && total[0] && (total[0]['stops'] as []).filter((stop: any) => stop?.other?.total)[0]['other']['total'])),
+      stopsoh: total && total[0] && (total[0]['stops'] as []).filter((stop: any) => stop?.other?.total)[0] && (Number(dayjs.duration((total && total[0] && (total[0]['stops'] as []).filter((stop: any) => stop?.other?.total))[0]['other']['dur']).asHours().toFixed(1)))
+    });
+    worksheet.getRow(6 + (data || []).length).font = { name: 'PTSans', family: 4, size: 11, bold: true }
     adjustColumnWidth(worksheet);
     const worksheet2 = workbook.addWorksheet(t('panel.weavers'));
     worksheet2.properties.defaultRowHeight = 20;
@@ -233,6 +266,15 @@ const MonthReport: React.FC<Props> = memo(({
         { header: t('stop.other'), key: 'stopso', },
         { header: t('stop.other') + ", " + t('shift.hours'), key: 'stopsoh', },
       ];
+    worksheet2.duplicateRow(1, 4, true);
+    addTitle(worksheet2, t('menu.monthReport') + ' ' + groups.filter(i => i.id == group)[0].name + ' ' + machines.filter(i => i.id == machine)[0].name, dayjs(period[0]).format('MMMM YYYY'))
+    worksheet2.getRow(5).font = { name: 'PTSans', family: 4, size: 9, bold: true }
+    worksheet2.getRow(5).eachCell((cell, number) => {
+      cell.fill = {
+        type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFececec' }
+      }
+      cell.border = { top: { style: 'thin' }, left: { style: 'thin' }, bottom: { style: 'thin' }, right: { style: 'thin' } }
+    })
     worksheet2.addRows((userData || []).map((record: any) => ({
       ...record,
       userid: (users.filter((item: any) => item.id == Number(record.userid)))[0]['name'],
@@ -287,6 +329,15 @@ const MonthReport: React.FC<Props> = memo(({
         { header: t('stop.other'), key: 'stopso', },
         { header: t('stop.other') + ", " + t('shift.hours'), key: 'stopsoh', },
       ];
+    worksheet3.duplicateRow(1, 4, true);
+    addTitle(worksheet3, t('menu.monthReport') + ' ' + groups.filter(i => i.id == group)[0].name + ' ' + machines.filter(i => i.id == machine)[0].name, dayjs(period[0]).format('MMMM YYYY'))
+    worksheet3.getRow(5).font = { name: 'PTSans', family: 4, size: 9, bold: true }
+    worksheet3.getRow(5).eachCell((cell, number) => {
+      cell.fill = {
+        type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFececec' }
+      }
+      cell.border = { top: { style: 'thin' }, left: { style: 'thin' }, bottom: { style: 'thin' }, right: { style: 'thin' } }
+    })
     worksheet3.addRows((shiftData || []).map((record: any) => ({
       ...record,
       shiftname: t('shift.shift') + ' ' + record.shiftname,
@@ -822,7 +873,7 @@ const MonthReport: React.FC<Props> = memo(({
           } />
         <h1 style={{ margin: 10 }}>{t('log.select')}</h1>
         <DatePicker style={{ flexGrow: 1 }} picker="month" format='MMMM YYYY' defaultValue={dayjs()} onChange={(e: any) => { setPeriod([e ? e?.startOf('month') : dayjs().startOf('month'), e ? e?.endOf('month') : dayjs()]) }} />
-        <Button shape="circle" icon={<SaveOutlined />} size="large" type="primary" style={{ margin: 10 }} onClick={confirm} ></Button>
+        <Button shape="circle" icon={<SaveOutlined style={{fontSize:'130%'}}/>} size="large" type="primary" style={{ margin: 10 }} onClick={confirm} ></Button>
       </div>
       <Tabs size='small' type='card' animated={{ inkBar: true, tabPane: true }} items={items} />
     </div>

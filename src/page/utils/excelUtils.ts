@@ -239,32 +239,30 @@ export function generateHeaders(columns: any[]) {
   });
 }
 
-export function addTitle(worksheet: Worksheet, title:string, subtitle?:string) {
+export function addTitle(worksheet: Worksheet, title: string, subtitle?: string) {
   // Add new row
-  let titleRow = worksheet.addRow([title]);
-
-  // Set font, size and style in title row.
-  titleRow.font = { name: 'PTSans', family: 4, size: 16, underline: 'double', bold: true };
-
-  // Blank Row
-  worksheet.addRow([]);
-
+  let titleRow = worksheet.getRow(1);
+  titleRow.values = [title]
+  // et titleRow = Set font, size and style in title row.
+  titleRow.font = { name: 'PTSans', family: 4, size: 14, bold: true };
+  worksheet.getRow(2).values = []
   //Add row with current date
-  let subTitleRow = worksheet.addRow([subtitle? subtitle:new Date()]);
-  worksheet.mergeCells('A1:D2');
-
-  //Blank Row
-  worksheet.addRow([]);
+  let subTitleRow = worksheet.getRow(3);
+  subTitleRow.values = [subtitle ? subtitle : new Date()];
+  worksheet.mergeCells('A1:X2');
+  worksheet.getRow(4).values = []
 }
 
 export function adjustColumnWidth(worksheet: Worksheet) {
   worksheet.columns.forEach(function (column, i) {
     var maxLength = 0;
     if (column.eachCell !== undefined) {
-      column.eachCell({ includeEmpty: true }, function (cell) {
-        var columnLength = cell.value ? cell.value.toString().length : 10;
-        if (columnLength > maxLength) {
-          maxLength = columnLength;
+      column.eachCell({ includeEmpty: false }, function (cell, row) {
+        if (row > 4) {
+          var columnLength = cell.value ? cell.value.toString().length : 10;
+          if (columnLength > maxLength) {
+            maxLength = columnLength;
+          }
         }
       });
       column.width = maxLength < 10 ? 10 : maxLength + 2;
