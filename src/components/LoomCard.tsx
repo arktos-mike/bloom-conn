@@ -169,7 +169,7 @@ const Component = memo((props: any) => {
               <span style={{ fontSize: '18px' }}>{getTagVal('orderLength') + '/' + getTagVal('planOrderLength') + ' ' + t('tags.orderLength.eng')}</span>
             </Form.Item>
             <Form.Item label={<FabricPieceIcon style={{ color: '#1890ff', fontSize: '130%' }} />}>
-              <span style={{ fontSize: '18px' }}>{fullinfo?.rolls + '/'}{getTagVal('planOrderLength') != '0' ? Math.floor(localeParseFloat(getTagVal('warpBeamLength')) * (1 - 0.01 * localeParseFloat(getTagVal('warpShrinkage'))) / localeParseFloat(getTagVal('planOrderLength'))) : 0}</span>
+              <span style={{ fontSize: '18px' }}>{fullinfo?.rolls + '/'}{getTagVal('planOrderLength') != '0' ? Math.floor(localeParseFloat(getTagVal('warpBeamLength')) * (1 - 0.01 * localeParseFloat(getTagVal('warpShrinkage'))) / localeParseFloat(getTagVal('planOrderLength'))) : 0}{' ' + t('tags.rollsCount.eng')}</span>
             </Form.Item>
             <Divider orientation="left"><b>{t('panel.lifetime')}</b></Divider>
             <Form.Item label={<ShoppingCartOutlined style={{ color: '#1890ff', fontSize: '130%' }} />} >
@@ -194,7 +194,7 @@ const Component = memo((props: any) => {
 
   const fetchAll = async () => {
     try {
-      const response = await fetch('http://localhost:3000/tags/full');
+      const response = await fetch('http://' + props.machine?.ip + ':3000/tags/full');
       if (!response.ok) { /*throw Error(response.statusText);*/ }
       const json = await response.json();
       setFullInfo(json);
