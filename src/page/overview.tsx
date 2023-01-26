@@ -7,6 +7,7 @@ import { useTranslation } from 'react-i18next';
 import dayjs from 'dayjs';
 import { FilterValue, SorterResult } from 'antd/es/table/interface';
 import { ButtonIcon, FabricFullIcon, WarpBeamIcon, WeftIcon } from '@/components/Icons';
+import { isEqual } from 'lodash';
 
 const Store = require('electron-store');
 const store = new Store();
@@ -68,6 +69,15 @@ const Overview: React.FC<Props> = memo(({
     }
   })
 
+  const [time, setTime] = useState(Date.now());
+
+  useEffect(() => {
+    const interval = setInterval(() => setTime(Date.now()), 1000);
+    return () => {
+      clearInterval(interval);
+    };
+  }, []);
+
   useEffect(() => {
     dayjs.locale(i18n.language)
     return () => { }
@@ -97,6 +107,17 @@ const Overview: React.FC<Props> = memo(({
     else if (reason == 'tool') { obj = { color: '#E53935FF', text: t('tags.mode.stop'), icon: <ToolOutlined style={{ fontSize: '175%', color: '#E53935FF', paddingInline: 5 }} /> } }
     else if (reason == 'fabric') { obj = { color: '#005498FF', text: t('tags.mode.stop'), icon: <FabricFullIcon style={{ fontSize: '175%', color: '#005498FF', paddingInline: 5 }} /> } }
     else { obj = { color: '#00000000', text: t('tags.mode.unknown'), icon: <QuestionCircleOutlined style={{ fontSize: '175%', color: '#00000000', paddingInline: 5 }} /> } }
+    return obj;
+  }
+
+  const stopNum = (reason: string) => {
+    let obj;
+    if (reason == 'other') obj = 0
+    else if (reason == 'button') obj = 2
+    else if (reason == 'warp') obj = 3
+    else if (reason == 'weft') obj = 4
+    else if (reason == 'tool') obj = 5
+    else if (reason == 'fabric') obj = 6
     return obj;
   }
 
@@ -218,7 +239,8 @@ const Overview: React.FC<Props> = memo(({
       render: (_, record) => <div><Badge
         count={record.starts} overflowCount={999}
         style={{ backgroundColor: '#52c41a' }}
-      /> {record?.runtime && duration2text(dayjs.duration(record?.runtime))}</div>
+
+      /> {record?.runtime && (record?.modeCode?.val == 1 ? duration2text(dayjs.duration(record?.runtime).add(dayjs().diff(record?.modeCode?.updated))) : duration2text(dayjs.duration(record?.runtime)))}</div>
     },
     Table.EXPAND_COLUMN,
     {
@@ -229,7 +251,7 @@ const Overview: React.FC<Props> = memo(({
       render: (_, record) => <div><Badge
         count={stopsAgg(record?.stops).total} overflowCount={999}
         style={{ backgroundColor: '#1890ff' }}
-      /> {duration2text(stopsAgg(record?.stops).dur)}</div>
+      /> {record?.modeCode?.val != 1 ? duration2text((stopsAgg(record?.stops).dur).add(dayjs().diff(record?.modeCode?.updated))) : duration2text(stopsAgg(record?.stops).dur)}</div>
     },
   ];
 
@@ -241,10 +263,10 @@ const Overview: React.FC<Props> = memo(({
             <div className='wrapper'>
               <Tabs size='small' type='card' animated={{ inkBar: true, tabPane: true }} items={items} tabBarExtraContent={{
                 right:
-                  <Segmented size='large' value={period} onChange={(value) => { setPeriod(value.toString()); } }
-                  options={[{ label: t('period.shift'), value: 'shift', icon: <ScheduleOutlined /> },
-                  { label: t('period.day'), value: 'day', icon: <HistoryOutlined /> },
-                  { label: t('period.month'), value: 'month', icon: <ReconciliationOutlined /> }]} onResize={undefined} onResizeCapture={undefined} />
+                  <Segmented size='large' value={period} onChange={(value) => { setPeriod(value.toString()); }}
+                    options={[{ label: t('period.shift'), value: 'shift', icon: <ScheduleOutlined /> },
+                    { label: t('period.day'), value: 'day', icon: <HistoryOutlined /> },
+                    { label: t('period.month'), value: 'month', icon: <ReconciliationOutlined /> }]} onResize={undefined} onResizeCapture={undefined} />
               }} />
             </div></div></div>
         <div>
@@ -261,7 +283,7 @@ const Overview: React.FC<Props> = memo(({
                       stop[Object.keys(stop)[0]]['total'] > 0 && <div style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }} key={Object.keys(stop)[0]}><Badge
                         count={stop[Object.keys(stop)[0]]['total']} overflowCount={999}
                         style={{ backgroundColor: stopObj(Object.keys(stop)[0]).color, marginRight: '3px' }}
-                      />{stopObj(Object.keys(stop)[0]).icon}{duration2text(dayjs.duration(stop[Object.keys(stop)[0]]['dur']))}</div>))
+                      />{stopObj(Object.keys(stop)[0]).icon}{record?.modeCode?.val == stopNum(Object.keys(stop)[0]) ? duration2text(dayjs.duration(stop[Object.keys(stop)[0]]['dur']).add(dayjs().diff(record?.modeCode?.updated))) : duration2text(dayjs.duration(stop[Object.keys(stop)[0]]['dur']))}</div>))
                     }
                   </Space>,
                   rowExpandable: record => stopsAgg(record?.stops).total > 0,
@@ -285,7 +307,9 @@ const Overview: React.FC<Props> = memo(({
     </div >
   )
 },
-  (pre, next) => true
+  (pre, next) => {
+    return isEqual(pre, next);
+  }
 );
 
 export default Overview
