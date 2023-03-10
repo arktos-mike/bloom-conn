@@ -1,6 +1,6 @@
 const locale = {
   "self": "Español",
-  "footer": "© TEHMASHHOLDING Cheboksary, Rusia",
+  "footer": "© TEXTILMACH Cheboksary, Rusia",
   "decimalSeparator": ",",
   "menu": {
     "title": "Sistema de monitoreo de flota de telares",
