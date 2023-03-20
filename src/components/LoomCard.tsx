@@ -25,9 +25,22 @@ const Component = memo((props: any) => {
     dayinfo: { start: '', end: '', picks: 0, meters: 0, rpm: 0, mph: 0, efficiency: 0 },
     monthinfo: { start: '', end: '', picks: 0, meters: 0, rpm: 0, mph: 0, efficiency: 0 }
   })
+  const [userinfo, setUserinfo] = useState({
+    workdur: '',
+    picks: 0,
+    meters: 0,
+    rpm: 0,
+    mph: 0,
+    efficiency: 0,
+    start:'',
+    starts: 0,
+    runtime: { milliseconds: 0, seconds: 0, minutes: 0, hours: 0, days: 0, weeks: 0, months: 0, years: 0 },
+    stops: {}
+  })
   const [fullinfo, setFullInfo] = useState({
     tags: [],
     rolls: '',
+    modeCode: { val: 0, updated: '' },
     shift: { shiftname: '', shiftstart: '', shiftend: '', shiftdur: '' },
     lifetime: { type: '', serialno: '', mfgdate: '', picks: 0, cloth: 0, motor: '' },
     weaver: { id: '', name: '', logintime: '' },
@@ -38,6 +51,8 @@ const Component = memo((props: any) => {
   })
   const [periodInfo, setPeriodInfo] = useState<any>((props.period == 'day' || ((!fullinfo?.shift?.shiftstart || !fullinfo?.shift?.shiftend) && props.period == 'shift')) ? { name: dayjs(fullinfo?.dayinfo?.start).format('LL'), start: fullinfo?.dayinfo?.start, end: fullinfo?.dayinfo?.end, duration: '', picks: fullinfo?.dayinfo?.picks, meters: fullinfo?.dayinfo?.meters, rpm: fullinfo?.dayinfo?.rpm, mph: fullinfo?.dayinfo?.mph, efficiency: fullinfo?.dayinfo?.efficiency, starts: fullinfo?.dayinfo?.starts, runtime: fullinfo?.dayinfo?.runtime, stops: fullinfo?.dayinfo?.stops } : (props.period == 'shift') ? { name: t('shift.shift') + ' ' + fullinfo?.shift?.shiftname, start: fullinfo?.shift?.shiftstart, end: fullinfo?.shift?.shiftend, duration: fullinfo?.shift?.shiftdur, picks: fullinfo?.shiftinfo?.picks, meters: fullinfo?.shiftinfo?.meters, rpm: fullinfo?.shiftinfo?.rpm, mph: fullinfo?.shiftinfo?.mph, efficiency: fullinfo?.shiftinfo?.efficiency, starts: fullinfo?.shiftinfo?.starts, runtime: fullinfo?.shiftinfo?.runtime, stops: fullinfo?.shiftinfo?.stops } : (props.period == 'month') ? { name: dayjs(fullinfo?.monthinfo?.start).format('MMMM YYYY'), start: fullinfo?.monthinfo?.start, end: fullinfo?.monthinfo?.end, duration: '', picks: fullinfo?.monthinfo?.picks, meters: fullinfo?.monthinfo?.meters, rpm: fullinfo?.monthinfo?.rpm, mph: fullinfo?.monthinfo?.mph, efficiency: fullinfo?.monthinfo?.efficiency, starts: fullinfo?.monthinfo?.starts, runtime: fullinfo?.monthinfo?.runtime, stops: fullinfo?.monthinfo?.stops } : {})
   const [shiftDonut, setShiftDonut] = useState([] as any)
+  const [userInfo, setUserInfo] = useState<any>(dayjs(modeCode?.updated).isBefore(dayjs(userinfo?.start)) == true ? { name: info.weaver?.name, duration: userinfo?.workdur, start: info.weaver?.logintime, end: info.dayinfo?.end, picks: info.userinfo?.picks, meters: info.userinfo?.meters, rpm: info.userinfo?.rpm, mph: info.userinfo?.mph, efficiency: info.userinfo?.efficiency, starts: userinfo?.starts, runtime: userinfo?.runtime, stops: userinfo?.stops } : { name: fullinfo?.weaver?.name, start: fullinfo?.weaver?.logintime, end: fullinfo?.dayinfo?.end, duration: fullinfo?.userinfo?.workdur, picks: fullinfo?.userinfo?.picks, meters: fullinfo?.userinfo?.meters, rpm: fullinfo?.userinfo?.rpm, mph: fullinfo?.userinfo?.mph, efficiency: fullinfo?.userinfo?.efficiency, starts: fullinfo?.userinfo?.starts, runtime: fullinfo?.userinfo?.runtime, stops: fullinfo?.userinfo?.stops })
+  const [mode, setMode] = useState(modeCode)
   const [shiftDonutSel, setShiftDonutSel] = useState({ run: true, other: true, button: true, warp: true, weft: true, tool: true, fabric: true } as any)
 
   const [formShift] = Form.useForm();
@@ -143,12 +158,12 @@ const Component = memo((props: any) => {
                 {periodInfo?.starts > 0 && <div style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }} key={Object.keys(stop)[0]}><Badge size='small'
                   count={periodInfo?.starts} overflowCount={999}
                   style={{ backgroundColor: '#52c41aFF' }}
-                /><SyncOutlined style={{ fontSize: '130%', color: '#52c41aFF', paddingInline: 5 }} />{modeCode?.val == 1 ? duration2text(dayjs.duration(periodInfo?.runtime).add(dayjs().diff(modeCode?.updated))) : duration2text(dayjs.duration(periodInfo?.runtime))}</div>}
+                /><SyncOutlined style={{ fontSize: '130%', color: shiftDonutSel['run'] ? '#52c41aFF' : '#8c8c8c', paddingInline: 5 }} />{mode?.val == 1 ? duration2text(dayjs.duration(periodInfo?.runtime).add((dayjs(mode?.updated).isBefore(dayjs(periodInfo?.start)) == true ? dayjs().diff(dayjs(periodInfo?.start)) : dayjs().diff(dayjs(mode?.updated))))) : duration2text(dayjs.duration(periodInfo?.runtime))}</div>}
                 {Array.isArray(periodInfo?.stops) && periodInfo?.stops.map((stop: any) => (
                   stop[Object.keys(stop)[0]]['total'] > 0 && <div style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }} key={Object.keys(stop)[0]}><Badge size='small'
                     count={stop[Object.keys(stop)[0]]['total']} overflowCount={999}
                     style={{ backgroundColor: stopObj(Object.keys(stop)[0]).color }}
-                  />{stopObj(Object.keys(stop)[0]).icon}{modeCode?.val == stopNum(Object.keys(stop)[0]) ? duration2text(dayjs.duration(stop[Object.keys(stop)[0]]['dur']).add(dayjs().diff(modeCode?.updated))) : duration2text(dayjs.duration(stop[Object.keys(stop)[0]]['dur']))}</div>))
+                  />{stopObj(Object.keys(stop)[0]).icon}{mode?.val == stopNum(Object.keys(stop)[0]) ? duration2text(dayjs.duration(stop[Object.keys(stop)[0]]['dur']).add((dayjs(mode?.updated).isBefore(dayjs(periodInfo?.start)) == true ? dayjs().diff(dayjs(periodInfo?.start)) : dayjs().diff(dayjs(mode?.updated))))) : duration2text(dayjs.duration(stop[Object.keys(stop)[0]]['dur']))}</div>))
                 }
               </Space>
             </Form.Item>
@@ -257,21 +272,26 @@ const Component = memo((props: any) => {
   }, [link])
 
   useEffect(() => {
+    if (mode?.val === undefined) { setMode({ val: modeCode?.val, updated: dayjs().subtract(1, 's') }) }
     if (Array.isArray(periodInfo?.stops)) {
       let obj = []
-      obj.push({ reason: 'run', value: dayjs.duration(periodInfo?.runtime || 0).asMilliseconds(), count: Number(periodInfo?.starts) })
+      obj.push({ reason: 'run', value: mode?.val == 1 ? dayjs.duration(periodInfo?.runtime).add((dayjs(mode?.updated).isBefore(dayjs(periodInfo?.start)) == true ? dayjs().diff(dayjs(periodInfo?.start)) : dayjs().diff(dayjs(mode?.updated)))).asMilliseconds() : dayjs.duration(periodInfo?.runtime).asMilliseconds(), count: Number(periodInfo?.starts) })
       for (let stop of periodInfo?.stops) {
-        obj.push({ reason: Object.keys(stop)[0], value: dayjs.duration(stop[Object.keys(stop)[0]]['dur']).asMilliseconds(), count: stop[Object.keys(stop)[0]]['total'] })
+        obj.push({ reason: Object.keys(stop)[0], value: mode?.val == stopNum(Object.keys(stop)[0]) ? dayjs.duration(stop[Object.keys(stop)[0]]['dur']).add((dayjs(mode?.updated).isBefore(dayjs(periodInfo?.start)) == true ? dayjs().diff(dayjs(periodInfo?.start)) : dayjs().diff(dayjs(mode?.updated)))).asMilliseconds() : dayjs.duration(stop[Object.keys(stop)[0]]['dur']).asMilliseconds(), count: stop[Object.keys(stop)[0]]['total'] })
       }
       setShiftDonut(obj);
     }
     return () => { }
-  }, [periodInfo?.runtime, periodInfo?.stops, props.period])
+  }, [periodInfo, props.period])
 
   useEffect(() => {
+    fullinfo?.modeCode && setMode({ val: fullinfo?.modeCode?.val, updated: dayjs(fullinfo?.modeCode?.updated) })
     if (props.period == 'day' || ((!fullinfo?.shift?.shiftstart || !fullinfo?.shift?.shiftend) && props.period == 'shift')) setPeriodInfo({ name: dayjs(fullinfo?.dayinfo?.start).format('LL'), start: fullinfo?.dayinfo?.start, end: fullinfo?.dayinfo?.end, duration: '', picks: fullinfo?.dayinfo?.picks, meters: fullinfo?.dayinfo?.meters, rpm: fullinfo?.dayinfo?.rpm, mph: fullinfo?.dayinfo?.mph, efficiency: fullinfo?.dayinfo?.efficiency, starts: fullinfo?.dayinfo?.starts, runtime: fullinfo?.dayinfo?.runtime, stops: fullinfo?.dayinfo?.stops });
     else if (props.period == 'shift') setPeriodInfo({ name: t('shift.shift') + ' ' + fullinfo?.shift?.shiftname, start: fullinfo?.shift?.shiftstart, end: fullinfo?.shift?.shiftend, duration: fullinfo?.shift?.shiftdur, picks: fullinfo?.shiftinfo?.picks, meters: fullinfo?.shiftinfo?.meters, rpm: fullinfo?.shiftinfo?.rpm, mph: fullinfo?.shiftinfo?.mph, efficiency: fullinfo?.shiftinfo?.efficiency, starts: fullinfo?.shiftinfo?.starts, runtime: fullinfo?.shiftinfo?.runtime, stops: fullinfo?.shiftinfo?.stops });
     else if (props.period == 'month') setPeriodInfo({ name: dayjs(fullinfo?.monthinfo?.start).format('MMMM YYYY'), start: fullinfo?.monthinfo?.start, end: fullinfo?.monthinfo?.end, duration: '', picks: fullinfo?.monthinfo?.picks, meters: fullinfo?.monthinfo?.meters, rpm: fullinfo?.monthinfo?.rpm, mph: fullinfo?.monthinfo?.mph, efficiency: fullinfo?.monthinfo?.efficiency, starts: fullinfo?.monthinfo?.starts, runtime: fullinfo?.monthinfo?.runtime, stops: fullinfo?.monthinfo?.stops });
+    if (dayjs(fullinfo?.modeCode?.updated).isAfter(dayjs(userInfo?.start)) == true) {
+      setUserInfo({ name: fullinfo?.weaver?.name, start: fullinfo?.weaver?.logintime, end: fullinfo?.dayinfo?.end, duration: fullinfo?.userinfo?.workdur, picks: fullinfo?.userinfo?.picks, meters: fullinfo?.userinfo?.meters, rpm: fullinfo?.userinfo?.rpm, mph: fullinfo?.userinfo?.mph, efficiency: fullinfo?.userinfo?.efficiency, starts: fullinfo?.userinfo?.starts, runtime: fullinfo?.userinfo?.runtime, stops: fullinfo?.userinfo?.stops });
+    }
   }, [fullinfo, props.period]);
 
   useEffect(() => {
@@ -279,6 +299,27 @@ const Component = memo((props: any) => {
     else if (props.period == 'shift') setPeriodInfo({ ...periodInfo, name: t('shift.shift') + ' ' + info.shift?.shiftname, start: info.shift?.shiftstart, end: info.shift?.shiftend, picks: info.shiftinfo?.picks, meters: info.shiftinfo?.meters, rpm: info.shiftinfo?.rpm, mph: info.shiftinfo?.mph, efficiency: info.shiftinfo?.efficiency });
     else if (props.period == 'month') setPeriodInfo({ ...periodInfo, name: dayjs(info.monthinfo?.start).format('MMMM YYYY'), start: info.monthinfo?.start, end: info.monthinfo?.end, picks: info.monthinfo?.picks, meters: info.monthinfo?.meters, rpm: info.monthinfo?.rpm, mph: info.monthinfo?.mph, efficiency: info.monthinfo?.efficiency });
   }, [info.dayinfo?.end]);
+
+  useEffect(() => {
+    setUserInfo({ ...userInfo, name: info.weaver?.name, start: info.weaver?.logintime, end: info.dayinfo?.end, picks: info.userinfo?.picks, meters: info.userinfo?.meters, rpm: info.userinfo?.rpm, mph: info.userinfo?.mph, efficiency: info.userinfo?.efficiency });
+  }, [info?.userinfo, info.weaver?.id && props.period, info.weaver?.logintime]);
+
+  useEffect(() => {
+    if (Array.isArray(userinfo?.stops) && (dayjs(userinfo?.start).isAfter(info?.weaver?.logintime) || info?.weaver?.logintime === undefined)) setUserInfo({ ...userInfo, picks: userinfo?.picks, meters: userinfo?.meters, rpm: userinfo?.rpm, mph: userinfo?.mph, efficiency: userinfo?.efficiency, starts: userinfo?.starts, duration: userinfo?.workdur, runtime: userinfo?.runtime, stops: userinfo?.stops });
+  }, [userinfo?.stops]);
+
+  useEffect(() => {
+    if (mode?.val === undefined) { setMode({ val: modeCode?.val, updated: dayjs().subtract(1, 's') }) }
+    if (Array.isArray(periodInfo?.stops)) {
+      let obj = []
+      obj.push({ reason: 'run', value: mode?.val == 1 ? dayjs.duration(periodInfo?.runtime).add((dayjs(mode?.updated).isBefore(dayjs(periodInfo?.start)) == true ? dayjs().diff(dayjs(periodInfo?.start)) : dayjs().diff(dayjs(mode?.updated)))).asMilliseconds() : dayjs.duration(periodInfo?.runtime).asMilliseconds(), count: Number(periodInfo?.starts) })
+      for (let stop of periodInfo?.stops) {
+        obj.push({ reason: Object.keys(stop)[0], value: mode?.val == stopNum(Object.keys(stop)[0]) ? dayjs.duration(stop[Object.keys(stop)[0]]['dur']).add((dayjs(mode?.updated).isBefore(dayjs(periodInfo?.start)) == true ? dayjs().diff(dayjs(periodInfo?.start)) : dayjs().diff(dayjs(mode?.updated)))).asMilliseconds() : dayjs.duration(stop[Object.keys(stop)[0]]['dur']).asMilliseconds(), count: stop[Object.keys(stop)[0]]['total'] })
+      }
+      setShiftDonut(obj);
+    }
+    return () => { }
+  }, [periodInfo, props.period])
 
   useEffect(() => {
     props.onData({
@@ -320,7 +361,9 @@ const Component = memo((props: any) => {
         const updatedTags = tags.map(obj => json.tags.find((o: any) => o['tag']!['name'] === obj['tag']['name']) || obj);
         setTags(updatedTags);
       }
-
+      if (json.modeCode) {
+        setModeCode({ val: json[0]['modeCode']['val'], updated: dayjs(json[0]['modeCode']['updated']) })
+      }
     });
 
     source.addEventListener('info', (e) => {
@@ -331,6 +374,11 @@ const Component = memo((props: any) => {
         setTags(updatedTags);
         setLink(json.tags[0]['link']);
       }
+    });
+
+    source.addEventListener('userinfo', (e) => {
+      const json = JSON.parse(e.data);
+      setUserinfo(json);
     });
 
     source.addEventListener('rolls', (e) => {
