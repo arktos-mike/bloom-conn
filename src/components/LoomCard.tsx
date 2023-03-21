@@ -2,7 +2,7 @@ import { Badge, Card, Divider, Empty, Form, Modal, Space } from "antd";
 import { useTranslation } from 'react-i18next';
 import { ToolOutlined, QuestionCircleOutlined, LoadingOutlined, SyncOutlined, DashboardOutlined, ClockCircleOutlined, RiseOutlined, ScheduleOutlined, UserOutlined, ReconciliationOutlined, HistoryOutlined, PieChartOutlined, ShoppingCartOutlined, PercentageOutlined } from '@ant-design/icons';
 import { FabricFullIcon, ButtonIcon, WeftIcon, WarpBeamIcon, FabricPieceLengthIcon, FabricPieceIcon, DensityIcon, SpeedIcon } from '@/components/Icons';
-import { createContext, memo, useEffect, useState } from "react";
+import { memo, useEffect, useState } from "react";
 import dayjs from 'dayjs';
 import duration from 'dayjs/plugin/duration';
 dayjs.extend(duration);
@@ -10,10 +10,8 @@ import isBetween from 'dayjs/plugin/isBetween';
 import Donut from "./Donut";
 import { isEqual, update } from "lodash";
 dayjs.extend(isBetween);
-const Context = createContext<string | null>(null);
 let instance: { destroy: any; update: any; };
 const Component = memo((props: any) => {
-
   const { t, i18n } = useTranslation();
   const [modeCode, setModeCode] = useState<any>();
   const [tags, setTags] = useState<any[]>([])
@@ -157,7 +155,7 @@ const Component = memo((props: any) => {
 
   const loomDetails = () => {
     Modal.destroyAll();
-      instance = modal.info({
+    instance = modal.info({
       title: <span style={{ fontSize: '20px' }}><b>{props.machine.name} </b>{fullinfo?.lifetime?.type && <Divider type="vertical" />}{fullinfo?.lifetime?.type && fullinfo?.lifetime?.type}{fullinfo?.lifetime?.serialno && <Divider type="vertical" />}{fullinfo?.lifetime?.serialno && ('№' + fullinfo?.lifetime?.serialno)}<Divider type="vertical" />{props.machine.ip}</span>,
       centered: true,
       maskClosable: true,
@@ -256,17 +254,36 @@ const Component = memo((props: any) => {
   }, [])
 
   useEffect(() => {
+    //console.log(tags.filter(x => x['tag']['name'] == 'orderLength')[0]['val'])
+    return () => { }
+  }, [tags])
+
+  useEffect(() => {
+    if (fullinfo?.tags.length > 0) {
+      const updatedTags = tags.map(obj => fullinfo?.tags.find((o: any) => o['tag']!['name'] === obj['tag']['name']) || obj);
+      setTags(updatedTags);
+    }
+    return () => { }
+  }, [fullinfo?.tags])
+
+  useEffect(() => {
+    if (info?.tags.length > 0) {
+      const updatedTags = tags.map(obj => info?.tags.find((o: any) => o['tag']!['name'] === obj['tag']['name']) || obj);
+      setTags(updatedTags);
+      setLink(info?.tags.filter(x => x['link'] !== null)[0]['link']);
+      console.log(info?.tags.filter(x => x['tag']['name'] == 'orderLength')[0]['val'])
+    }
+    return () => { }
+  }, [info?.tags])
+
+  useEffect(() => {
     const source = new EventSource('http://' + props.machine?.ip + ':3000/tags/events');
 
     source.addEventListener('tags', (e) => {
       const json = JSON.parse(e.data);
-      if (tags.length > 0) {
+      if (json.length > 0) {
         const updatedTags = tags.map(obj => json.find((o: any) => o['tag']!['name'] === obj['tag']['name']) || obj);
         setTags(updatedTags);
-        console.log('tags '+ getTagVal("orderLength"))
-      }
-      else {
-        fetchTags()
       }
       if (e.lastEventId == 'modeCode') {
         setModeCode({ val: json[0]['val'], updated: dayjs(json[0]['updated']) })
@@ -277,14 +294,6 @@ const Component = memo((props: any) => {
     source.addEventListener('fullinfo', (e) => {
       const json = JSON.parse(e.data);
       setFullInfo(json);
-      if (tags.length > 0) {
-        const updatedTags = tags.map(obj => json.tags.find((o: any) => o['tag']!['name'] === obj['tag']['name']) || obj);
-        setTags(updatedTags);
-        console.log('fullinfo '+ getTagVal("orderLength"))
-      }
-      else {
-        fetchTags()
-      }
       if (json['modeCode']) {
         setModeCode({ val: json['modeCode']['val'], updated: dayjs(json['modeCode']['updated']) })
       }
@@ -293,16 +302,6 @@ const Component = memo((props: any) => {
     source.addEventListener('info', (e) => {
       const json = JSON.parse(e.data);
       setInfo(json);
-      if (tags.length > 0) {
-        const updatedTags = tags.map(obj => json.tags.find((o: any) => o['tag']!['name'] === obj['tag']['name']) || obj);
-        setTags(updatedTags);
-
-        console.log('info '+ getTagVal("orderLength"))
-        setLink(json.tags[0]['link']);
-      }
-      else {
-        fetchTags()
-      }
     });
 
     source.addEventListener('userinfo', (e) => {
@@ -392,91 +391,89 @@ const Component = memo((props: any) => {
   }, [modeCode?.val, periodInfo?.picks, periodInfo?.stops, periodInfo?.starts, periodInfo?.efficiency, props.period])
 
   useEffect(() => {
-    instance && instance.update({
-      title: <span style={{ fontSize: '20px' }}><b>{props.machine.name} </b>{fullinfo?.lifetime?.type && <Divider type="vertical" />}{fullinfo?.lifetime?.type && fullinfo?.lifetime?.type}{fullinfo?.lifetime?.serialno && <Divider type="vertical" />}{fullinfo?.lifetime?.serialno && ('№' + fullinfo?.lifetime?.serialno)}<Divider type="vertical" />{props.machine.ip}</span>,
-      content: (
-        (modeCode?.val > 0) ?
-          <Form
-            labelCol={{ span: 4 }}
-            wrapperCol={{ span: 20 }}
-            size='small'
-            form={formShift}
-            style={{ width: '100%' }}
-            preserve={false}
-            colon={false}
-          >
-            <Divider orientation="left"><b>{periodInfo?.name}</b></Divider>
-            <Form.Item label={<RiseOutlined style={{ color: '#1890ff', fontSize: '130%' }} />}>
-              <span style={{ fontSize: '18px' }}>{Number(Number(periodInfo?.efficiency).toFixed(periodInfo?.efficiency < 10 ? 2 : 1)).toLocaleString(i18n.language) + ' ' + t('tags.efficiency.eng')}</span>
-            </Form.Item>
-            <Form.Item label={<ClockCircleOutlined style={{ color: '#1890ff', fontSize: '130%' }} />} >
-              <span style={{ fontSize: '18px' }}>{dayjs(periodInfo?.start).format('LL LT') + ' - ' + dayjs(periodInfo?.end).format('LL LT') + (periodInfo?.duration && (', ' + duration2text(dayjs.duration(periodInfo?.duration))))}</span>
-            </Form.Item>
-            <Form.Item label={<SyncOutlined style={{ fontSize: '130%', color: '#1890ff' }} />}  >
-              <span style={{ fontSize: '18px' }}>{Number(periodInfo?.picks) + ' ' + t('tags.picksLastRun.eng') + ', ' + Number(Number(periodInfo?.meters).toFixed(2)).toLocaleString(i18n.language) + ' ' + t('tags.clothMeters.eng')}</span>
-            </Form.Item>
-            <Form.Item label={<WarpBeamIcon style={{ fontSize: '130%', color: '#1890ff' }} />}  >
-              <span style={{ fontSize: '18px' }}>{getTagVal('warpBeamLength') + '/' + getTagVal('fullWarpBeamLength') + ' ' + t('tags.warpBeamLength.eng')}</span>
-            </Form.Item>
-            <Form.Item label={<DashboardOutlined style={{ fontSize: '130%', color: '#1890ff' }} />} >
-              <span style={{ fontSize: '18px' }}>{Number(Number(periodInfo?.rpm).toFixed(1)).toLocaleString(i18n.language) + ' ' + t('tags.speedMainDrive.eng') + ', ' + Number(Number(periodInfo?.mph).toFixed(2)).toLocaleString(i18n.language) + ' ' + t('tags.speedCloth.eng')}</span>
-            </Form.Item>
-            <Form.Item label={<PieChartOutlined style={{ color: '#1890ff', fontSize: '130%' }} />} >
-              <Space direction="horizontal" style={{ width: '100%', justifyContent: 'start', alignItems: 'start' }} wrap>
-                {periodInfo?.starts > 0 && <div style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }} key={Object.keys(stop)[0]}><Badge size='small'
-                  count={periodInfo?.starts} overflowCount={999}
-                  style={{ backgroundColor: '#52c41aFF' }}
-                /><SyncOutlined style={{ fontSize: '130%', color: shiftDonutSel['run'] ? '#52c41aFF' : '#8c8c8c', paddingInline: 5 }} />{mode?.val == 1 ? duration2text(dayjs.duration(periodInfo?.runtime).add((dayjs(mode?.updated).isBefore(dayjs(periodInfo?.start)) == true ? dayjs().diff(dayjs(periodInfo?.start)) : dayjs().diff(dayjs(mode?.updated))))) : duration2text(dayjs.duration(periodInfo?.runtime))}</div>}
-                {Array.isArray(periodInfo?.stops) && periodInfo?.stops.map((stop: any) => (
-                  stop[Object.keys(stop)[0]]['total'] > 0 && <div style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }} key={Object.keys(stop)[0]}><Badge size='small'
-                    count={stop[Object.keys(stop)[0]]['total']} overflowCount={999}
-                    style={{ backgroundColor: stopObj(Object.keys(stop)[0]).color }}
-                  />{stopObj(Object.keys(stop)[0]).icon}{mode?.val == stopNum(Object.keys(stop)[0]) ? duration2text(dayjs.duration(stop[Object.keys(stop)[0]]['dur']).add((dayjs(mode?.updated).isBefore(dayjs(periodInfo?.start)) == true ? dayjs().diff(dayjs(periodInfo?.start)) : dayjs().diff(dayjs(mode?.updated))))) : duration2text(dayjs.duration(stop[Object.keys(stop)[0]]['dur']))}</div>))
-                }
-              </Space>
-            </Form.Item>
-            {userInfo?.name && <Form.Item label={<UserOutlined style={{ fontSize: '130%', color: '#1890ff' }} />} >
-              <span style={{ fontSize: '18px' }}>{userInfo?.name}</span>
-            </Form.Item>}
-            <Divider orientation="left"><b>{t('panel.setpoints')}</b></Divider>
-            <Form.Item label={<DensityIcon style={{ color: '#1890ff', fontSize: '130%' }} />}>
-              <span style={{ fontSize: '18px' }}>{getTagVal('planClothDensity') + ' ' + t('tags.planClothDensity.eng')}</span>
-            </Form.Item>
-            <Form.Item label={<SpeedIcon style={{ color: '#1890ff', fontSize: '130%' }} />}>
-              <span style={{ fontSize: '18px' }}>{getTagVal('planSpeedMainDrive') + ' ' + t('tags.planSpeedMainDrive.eng')}</span>
-            </Form.Item>
-            <Form.Item label={<PercentageOutlined style={{ color: '#1890ff', fontSize: '130%' }} />}>
-              <span style={{ fontSize: '18px' }}>{getTagVal('warpShrinkage') + ' ' + t('tags.warpShrinkage.eng')}</span>
-            </Form.Item>
-            <Form.Item label={<FabricPieceLengthIcon style={{ color: '#1890ff', fontSize: '130%' }} />}>
-              <span style={{ fontSize: '18px' }}>{getTagVal('orderLength') + '/' + getTagVal('planOrderLength') + ' ' + t('tags.orderLength.eng')}</span>
-            </Form.Item>
-            <Form.Item label={<FabricPieceIcon style={{ color: '#1890ff', fontSize: '130%' }} />}>
-              <span style={{ fontSize: '18px' }}>{fullinfo?.rolls + '/'}{getTagVal('planOrderLength') != '0' ? Math.floor(localeParseFloat(getTagVal('warpBeamLength')) * (1 - 0.01 * localeParseFloat(getTagVal('warpShrinkage'))) / localeParseFloat(getTagVal('planOrderLength'))) : 0}{' ' + t('tags.rollsCount.eng')}</span>
-            </Form.Item>
-            <Divider orientation="left"><b>{t('panel.lifetime')}</b></Divider>
-            <Form.Item label={<ShoppingCartOutlined style={{ color: '#1890ff', fontSize: '130%' }} />} >
-              <span style={{ fontSize: '18px' }}>{fullinfo?.lifetime?.mfgdate && dayjs(fullinfo?.lifetime?.mfgdate).format("LL")}</span>
-            </Form.Item>
-            <Form.Item label={<SyncOutlined style={{ color: '#1890ff', fontSize: '130%' }} />} >
-              <span style={{ fontSize: '18px' }}>{fullinfo?.lifetime?.picks > 0 && ((fullinfo?.lifetime?.picks + ((modeCode?.val == 1) ? Number(getTagVal('picksLastRun')) : 0)) + ' ' + t('tags.planClothDensity.eng').split('/')[0])}</span>
-            </Form.Item>
-            <Form.Item label={<FabricPieceIcon style={{ color: '#1890ff', fontSize: '130%' }} />} >
-              <span style={{ fontSize: '18px' }}>{fullinfo?.lifetime?.cloth > 0 && (Number(Number((modeCode?.val == 1) ? fullinfo?.lifetime?.cloth + Number(getTagVal('picksLastRun')) / (100 * Number(getTagVal('planClothDensity'))) : fullinfo?.lifetime?.cloth).toFixed(2).toString()).toLocaleString(i18n.language) + ' ' + t('tags.planClothDensity.eng')?.split('/')[1]?.slice(-1))}</span>
-            </Form.Item>
-            <Form.Item label={<HistoryOutlined style={{ color: '#1890ff', fontSize: '130%' }} />} >
-              <span style={{ fontSize: '18px' }}>{duration2text((modeCode?.val == 1) ? dayjs.duration(fullinfo?.lifetime?.motor).add(dayjs().diff(modeCode?.updated)) : dayjs.duration(fullinfo?.lifetime?.motor))}</span>
-            </Form.Item>
-          </Form> : <Empty description={false} />
-      ),
-    });
+
+    instance && instance.update(
+      {
+        title: <span style={{ fontSize: '20px' }}><b>{props.machine.name} </b>{fullinfo?.lifetime?.type && <Divider type="vertical" />}{fullinfo?.lifetime?.type && fullinfo?.lifetime?.type}{fullinfo?.lifetime?.serialno && <Divider type="vertical" />}{fullinfo?.lifetime?.serialno && ('№' + fullinfo?.lifetime?.serialno)}<Divider type="vertical" />{props.machine.ip}</span>,
+        content: (
+          (modeCode?.val > 0) ?
+            <Form
+              labelCol={{ span: 4 }}
+              wrapperCol={{ span: 20 }}
+              size='small'
+              form={formShift}
+              style={{ width: '100%' }}
+              preserve={false}
+              colon={false}
+            >
+              <Divider orientation="left"><b>{periodInfo?.name}</b></Divider>
+              <Form.Item label={<RiseOutlined style={{ color: '#1890ff', fontSize: '130%' }} />}>
+                <span style={{ fontSize: '18px' }}>{Number(Number(periodInfo?.efficiency).toFixed(periodInfo?.efficiency < 10 ? 2 : 1)).toLocaleString(i18n.language) + ' ' + t('tags.efficiency.eng')}</span>
+              </Form.Item>
+              <Form.Item label={<ClockCircleOutlined style={{ color: '#1890ff', fontSize: '130%' }} />} >
+                <span style={{ fontSize: '18px' }}>{dayjs(periodInfo?.start).format('LL LT') + ' - ' + dayjs(periodInfo?.end).format('LL LT') + (periodInfo?.duration && (', ' + duration2text(dayjs.duration(periodInfo?.duration))))}</span>
+              </Form.Item>
+              <Form.Item label={<SyncOutlined style={{ fontSize: '130%', color: '#1890ff' }} />}  >
+                <span style={{ fontSize: '18px' }}>{Number(periodInfo?.picks) + ' ' + t('tags.picksLastRun.eng') + ', ' + Number(Number(periodInfo?.meters).toFixed(2)).toLocaleString(i18n.language) + ' ' + t('tags.clothMeters.eng')}</span>
+              </Form.Item>
+              <Form.Item label={<WarpBeamIcon style={{ fontSize: '130%', color: '#1890ff' }} />}  >
+                <span style={{ fontSize: '18px' }}>{getTagVal('warpBeamLength') + '/' + getTagVal('fullWarpBeamLength') + ' ' + t('tags.warpBeamLength.eng')}</span>
+              </Form.Item>
+              <Form.Item label={<DashboardOutlined style={{ fontSize: '130%', color: '#1890ff' }} />} >
+                <span style={{ fontSize: '18px' }}>{Number(Number(periodInfo?.rpm).toFixed(1)).toLocaleString(i18n.language) + ' ' + t('tags.speedMainDrive.eng') + ', ' + Number(Number(periodInfo?.mph).toFixed(2)).toLocaleString(i18n.language) + ' ' + t('tags.speedCloth.eng')}</span>
+              </Form.Item>
+              <Form.Item label={<PieChartOutlined style={{ color: '#1890ff', fontSize: '130%' }} />} >
+                <Space direction="horizontal" style={{ width: '100%', justifyContent: 'start', alignItems: 'start' }} wrap>
+                  {periodInfo?.starts > 0 && <div style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }} key={Object.keys(stop)[0]}><Badge size='small'
+                    count={periodInfo?.starts} overflowCount={999}
+                    style={{ backgroundColor: '#52c41aFF' }}
+                  /><SyncOutlined style={{ fontSize: '130%', color: shiftDonutSel['run'] ? '#52c41aFF' : '#8c8c8c', paddingInline: 5 }} />{mode?.val == 1 ? duration2text(dayjs.duration(periodInfo?.runtime).add((dayjs(mode?.updated).isBefore(dayjs(periodInfo?.start)) == true ? dayjs().diff(dayjs(periodInfo?.start)) : dayjs().diff(dayjs(mode?.updated))))) : duration2text(dayjs.duration(periodInfo?.runtime))}</div>}
+                  {Array.isArray(periodInfo?.stops) && periodInfo?.stops.map((stop: any) => (
+                    stop[Object.keys(stop)[0]]['total'] > 0 && <div style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }} key={Object.keys(stop)[0]}><Badge size='small'
+                      count={stop[Object.keys(stop)[0]]['total']} overflowCount={999}
+                      style={{ backgroundColor: stopObj(Object.keys(stop)[0]).color }}
+                    />{stopObj(Object.keys(stop)[0]).icon}{mode?.val == stopNum(Object.keys(stop)[0]) ? duration2text(dayjs.duration(stop[Object.keys(stop)[0]]['dur']).add((dayjs(mode?.updated).isBefore(dayjs(periodInfo?.start)) == true ? dayjs().diff(dayjs(periodInfo?.start)) : dayjs().diff(dayjs(mode?.updated))))) : duration2text(dayjs.duration(stop[Object.keys(stop)[0]]['dur']))}</div>))
+                  }
+                </Space>
+              </Form.Item>
+              {userInfo?.name && <Form.Item label={<UserOutlined style={{ fontSize: '130%', color: '#1890ff' }} />} >
+                <span style={{ fontSize: '18px' }}>{userInfo?.name}</span>
+              </Form.Item>}
+              <Divider orientation="left"><b>{t('panel.setpoints')}</b></Divider>
+              <Form.Item label={<DensityIcon style={{ color: '#1890ff', fontSize: '130%' }} />}>
+                <span style={{ fontSize: '18px' }}>{getTagVal('planClothDensity') + ' ' + t('tags.planClothDensity.eng')}</span>
+              </Form.Item>
+              <Form.Item label={<SpeedIcon style={{ color: '#1890ff', fontSize: '130%' }} />}>
+                <span style={{ fontSize: '18px' }}>{getTagVal('planSpeedMainDrive') + ' ' + t('tags.planSpeedMainDrive.eng')}</span>
+              </Form.Item>
+              <Form.Item label={<PercentageOutlined style={{ color: '#1890ff', fontSize: '130%' }} />}>
+                <span style={{ fontSize: '18px' }}>{getTagVal('warpShrinkage') + ' ' + t('tags.warpShrinkage.eng')}</span>
+              </Form.Item>
+              <Form.Item label={<FabricPieceLengthIcon style={{ color: '#1890ff', fontSize: '130%' }} />}>
+                <span style={{ fontSize: '18px' }}>{getTagVal('orderLength') + '/' + getTagVal('planOrderLength') + ' ' + t('tags.orderLength.eng')}</span>
+              </Form.Item>
+              <Form.Item label={<FabricPieceIcon style={{ color: '#1890ff', fontSize: '130%' }} />}>
+                <span style={{ fontSize: '18px' }}>{fullinfo?.rolls + '/'}{getTagVal('planOrderLength') != '0' ? Math.floor(localeParseFloat(getTagVal('warpBeamLength')) * (1 - 0.01 * localeParseFloat(getTagVal('warpShrinkage'))) / localeParseFloat(getTagVal('planOrderLength'))) : 0}{' ' + t('tags.rollsCount.eng')}</span>
+              </Form.Item>
+              <Divider orientation="left"><b>{t('panel.lifetime')}</b></Divider>
+              <Form.Item label={<ShoppingCartOutlined style={{ color: '#1890ff', fontSize: '130%' }} />} >
+                <span style={{ fontSize: '18px' }}>{fullinfo?.lifetime?.mfgdate && dayjs(fullinfo?.lifetime?.mfgdate).format("LL")}</span>
+              </Form.Item>
+              <Form.Item label={<SyncOutlined style={{ color: '#1890ff', fontSize: '130%' }} />} >
+                <span style={{ fontSize: '18px' }}>{fullinfo?.lifetime?.picks > 0 && ((fullinfo?.lifetime?.picks + ((modeCode?.val == 1) ? Number(getTagVal('picksLastRun')) : 0)) + ' ' + t('tags.planClothDensity.eng').split('/')[0])}</span>
+              </Form.Item>
+              <Form.Item label={<FabricPieceIcon style={{ color: '#1890ff', fontSize: '130%' }} />} >
+                <span style={{ fontSize: '18px' }}>{fullinfo?.lifetime?.cloth > 0 && (Number(Number((modeCode?.val == 1) ? fullinfo?.lifetime?.cloth + Number(getTagVal('picksLastRun')) / (100 * Number(getTagVal('planClothDensity'))) : fullinfo?.lifetime?.cloth).toFixed(2).toString()).toLocaleString(i18n.language) + ' ' + t('tags.planClothDensity.eng')?.split('/')[1]?.slice(-1))}</span>
+              </Form.Item>
+              <Form.Item label={<HistoryOutlined style={{ color: '#1890ff', fontSize: '130%' }} />} >
+                <span style={{ fontSize: '18px' }}>{duration2text((modeCode?.val == 1) ? dayjs.duration(fullinfo?.lifetime?.motor).add(dayjs().diff(modeCode?.updated)) : dayjs.duration(fullinfo?.lifetime?.motor))}</span>
+              </Form.Item>
+            </Form> : <Empty description={false} />
+        ),
+      }
+    );
     return () => { }
   }, [periodInfo, userInfo, fullinfo, modeCode, props.period])
-
-  useEffect(() => {
-    console.log('updated '+ getTagVal("orderLength"))
-  }, [tags])
-
 
   return (
     <>
@@ -515,7 +512,7 @@ const Component = memo((props: any) => {
   );
 },
   (pre, next) => {
-    return isEqual(pre?.period, next?.period);
+    return true;
   }
 );
 export default Component;
