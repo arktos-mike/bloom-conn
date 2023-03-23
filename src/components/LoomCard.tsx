@@ -10,7 +10,6 @@ import isBetween from 'dayjs/plugin/isBetween';
 import Donut from "./Donut";
 import { isEqual, update } from "lodash";
 dayjs.extend(isBetween);
-let instance: { destroy: any; update: any; };
 const Component = memo((props: any) => {
   const { t, i18n } = useTranslation();
   const [modeCode, setModeCode] = useState<any>();
@@ -132,10 +131,12 @@ const Component = memo((props: any) => {
       const response = await fetch('http://' + props.machine?.ip + ':3000/tags');
       if (!response.ok) { /*throw Error(response.statusText);*/ }
       const json = await response.json();
-      setTags(json);
-      let obj = json.find((o: any) => o['tag']['name'] == 'modeCode')
-      obj && setModeCode({ val: obj['val'], updated: dayjs(obj['updated']) })
-      obj && setLink(obj['link']);
+      if (json.length > 0) {
+        setTags(json);
+        let obj = json.find((o: any) => o['tag']['name'] == 'modeCode')
+        obj && setModeCode({ val: obj['val'], updated: dayjs(obj['updated']) })
+        obj && setLink(obj['link']);
+      }
     }
     catch (error) { /*console.log(error);*/ }
   }
@@ -155,7 +156,7 @@ const Component = memo((props: any) => {
 
   const loomDetails = () => {
     Modal.destroyAll();
-    instance = modal.info({
+    props.machine.instance = modal.info({
       title: <span style={{ fontSize: '20px' }}><b>{props.machine.name} </b>{fullinfo?.lifetime?.type && <Divider type="vertical" />}{fullinfo?.lifetime?.type && fullinfo?.lifetime?.type}{fullinfo?.lifetime?.serialno && <Divider type="vertical" />}{fullinfo?.lifetime?.serialno && ('№' + fullinfo?.lifetime?.serialno)}<Divider type="vertical" />{props.machine.ip}</span>,
       centered: true,
       maskClosable: true,
@@ -238,30 +239,21 @@ const Component = memo((props: any) => {
           </Form> : <Empty description={false} />
       ),
       onOk() {
-        instance.destroy();
+        props.machine.instance.active = false
+        props.machine.instance.destroy();
+
       },
+      afterClose() {
+        props.machine.instance.active = false
+      }
     });
+    props.machine.instance.active = true
   };
-
-  useEffect(() => {
-    (async () => {
-      await Promise.all([
-        fetchTags(),
-        fetchAll()
-      ]);
-    })();
-    return () => { }
-  }, [])
-
-  useEffect(() => {
-    //console.log(tags.filter(x => x['tag']['name'] == 'orderLength')[0]['val'])
-    return () => { }
-  }, [tags])
 
   useEffect(() => {
     if (fullinfo?.tags.length > 0) {
       const updatedTags = tags.map(obj => fullinfo?.tags.find((o: any) => o['tag']!['name'] === obj['tag']['name']) || obj);
-      setTags(updatedTags);
+      if (updatedTags.length > 0) { setTags(updatedTags); }
     }
     return () => { }
   }, [fullinfo?.tags])
@@ -269,67 +261,73 @@ const Component = memo((props: any) => {
   useEffect(() => {
     if (info?.tags.length > 0) {
       const updatedTags = tags.map(obj => info?.tags.find((o: any) => o['tag']!['name'] === obj['tag']['name']) || obj);
-      setTags(updatedTags);
+      if (updatedTags.length > 0) { setTags(updatedTags); }
       setLink(info?.tags.filter(x => x['link'] !== null)[0]['link']);
-      console.log(info?.tags.filter(x => x['tag']['name'] == 'orderLength')[0]['val'])
     }
     return () => { }
   }, [info?.tags])
 
   useEffect(() => {
-    const source = new EventSource('http://' + props.machine?.ip + ':3000/tags/events');
+    if (props.machine.source === undefined) {
+      props.machine.source = new EventSource('http://' + props.machine?.ip + ':3000/tags/events');
 
-    source.addEventListener('tags', (e) => {
-      const json = JSON.parse(e.data);
-      if (json.length > 0) {
-        const updatedTags = tags.map(obj => json.find((o: any) => o['tag']!['name'] === obj['tag']['name']) || obj);
-        setTags(updatedTags);
-      }
-      if (e.lastEventId == 'modeCode') {
-        setModeCode({ val: json[0]['val'], updated: dayjs(json[0]['updated']) })
-        setLink(json[0]['link']);
-      }
-    });
+      props.machine.source.addEventListener('tags', (e: any) => {
+        const json = JSON.parse(e.data);
+        if (json.length > 0) {
+          const updatedTags = tags.map(obj => json.find((o: any) => o['tag']!['name'] === obj['tag']['name']) || obj);
+          if (updatedTags.length > 0) { setTags(updatedTags); }
+        }
+        if (e.lastEventId == 'modeCode') {
+          setModeCode({ val: json[0]['val'], updated: dayjs(json[0]['updated']) })
+          //setLink(json[0]['link']);
+        }
+      });
 
-    source.addEventListener('fullinfo', (e) => {
-      const json = JSON.parse(e.data);
-      setFullInfo(json);
-      if (json['modeCode']) {
-        setModeCode({ val: json['modeCode']['val'], updated: dayjs(json['modeCode']['updated']) })
-      }
-    });
+      props.machine.source.addEventListener('fullinfo', (e: any) => {
+        const json = JSON.parse(e.data);
+        setFullInfo(json);
+        if (json['modeCode']) {
+          setModeCode({ val: json['modeCode']['val'], updated: dayjs(json['modeCode']['updated']) })
+        }
+      });
 
-    source.addEventListener('info', (e) => {
-      const json = JSON.parse(e.data);
-      setInfo(json);
-    });
+      props.machine.source.addEventListener('info', (e: any) => {
+        const json = JSON.parse(e.data);
+        setInfo(json);
+      });
 
-    source.addEventListener('userinfo', (e) => {
-      const json = JSON.parse(e.data);
-      setUserinfo(json);
-    });
+      props.machine.source.addEventListener('userinfo', (e: any) => {
+        const json = JSON.parse(e.data);
+        setUserinfo(json);
+      });
 
-    source.addEventListener('rolls', (e) => {
-      setFullInfo({ ...fullinfo, rolls: JSON.parse(e.data) });
-    });
+      props.machine.source.addEventListener('rolls', (e: any) => {
+        setFullInfo({ ...fullinfo, rolls: JSON.parse(e.data) });
+      });
 
-    source.addEventListener('error', (e) => {
-      //console.error('Error: ',  e);
-      setLink(false);
-    });
+      props.machine.source.addEventListener('error', (e: any) => {
+        //console.error('Error: ',  e);
+        setLink(false);
+      });
+    }
+
     return () => {
-      source.close();
+      props.machine?.source?.close();
+      props.machine.source = (function () { return; })();
     };
-  }, []);
+  }, [props.machine.source === undefined]);
 
   useEffect(() => {
     (async () => {
-      if (!link) setModeCode({ val: 0, updated: dayjs() })
-      else {
-        await Promise.all([
-          fetchTags(),
-          fetchAll()
-        ]);
+      if ((props.machine.source != undefined) && (props.machine.update == true)) {
+        props.machine.update = false
+        if (!link) { setModeCode({ val: 0, updated: dayjs() }); props.machine.update = true }
+        else {
+          await Promise.all([
+            fetchTags(),
+            fetchAll()
+          ]);
+        }
       }
     })();
     return () => { }
@@ -391,8 +389,7 @@ const Component = memo((props: any) => {
   }, [modeCode?.val, periodInfo?.picks, periodInfo?.stops, periodInfo?.starts, periodInfo?.efficiency, props.period])
 
   useEffect(() => {
-
-    instance && instance.update(
+    props.machine?.instance?.active && props.machine.instance.update(
       {
         title: <span style={{ fontSize: '20px' }}><b>{props.machine.name} </b>{fullinfo?.lifetime?.type && <Divider type="vertical" />}{fullinfo?.lifetime?.type && fullinfo?.lifetime?.type}{fullinfo?.lifetime?.serialno && <Divider type="vertical" />}{fullinfo?.lifetime?.serialno && ('№' + fullinfo?.lifetime?.serialno)}<Divider type="vertical" />{props.machine.ip}</span>,
         content: (
@@ -512,7 +509,7 @@ const Component = memo((props: any) => {
   );
 },
   (pre, next) => {
-    return true;
+    return isEqual(pre?.period, next?.period);;
   }
 );
 export default Component;

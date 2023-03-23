@@ -8,6 +8,7 @@ import dayjs from 'dayjs';
 import { FilterValue, SorterResult } from 'antd/es/table/interface';
 import { ButtonIcon, FabricFullIcon, WarpBeamIcon, WeftIcon } from '@/components/Icons';
 import { isEqual } from 'lodash';
+import { ModalStaticFunctions } from 'antd/lib/modal/confirm';
 
 const Store = require('electron-store');
 const store = new Store();
@@ -58,10 +59,12 @@ const Overview: React.FC<Props> = memo(({
               xl: 4,
               xxl: 4,
             }}
-            dataSource={(machines || []).filter(item => item['groupId'] == group['id'])}
+            dataSource={(es || []).filter((item: any) => item['groupId'] == group['id'])}
             renderItem={(item) => (
               <List.Item>
-                <LoomCard machine={item} period={period} onData={handleLoomData} />
+                <React.Fragment>
+                  <LoomCard machine={item} period={period} onData={handleLoomData} />
+                </React.Fragment>
               </List.Item>
             )}
           />
@@ -97,6 +100,13 @@ const Overview: React.FC<Props> = memo(({
     }))
     return () => { }
   }, [machines && data.length == 0])
+  let instance: any;
+  let source: any;
+  useEffect(() => {
+    setEs((machines || []).map((obj: any) => ({ ...obj, instance: instance, source: source, update: true })))
+    return () => { }
+  }, [machines])
+
 
   const stopObj = (reason: string) => {
     let obj;
@@ -263,10 +273,10 @@ const Overview: React.FC<Props> = memo(({
             <div className='wrapper'>
               <Tabs size='small' type='card' animated={{ inkBar: true, tabPane: true }} items={items} tabBarExtraContent={{
                 right:
-                  <Segmented size='large' value={period} onChange={(value) => { setPeriod(value.toString()); } }
-                  options={[{ label: t('period.shift'), value: 'shift', icon: <ScheduleOutlined /> },
-                  { label: t('period.day'), value: 'day', icon: <HistoryOutlined /> },
-                  { label: t('period.month'), value: 'month', icon: <ReconciliationOutlined /> }]} onReset={undefined} onResetCapture={undefined} />
+                  <Segmented size='large' value={period} onChange={(value) => { setPeriod(value.toString()); }}
+                    options={[{ label: t('period.shift'), value: 'shift', icon: <ScheduleOutlined /> },
+                    { label: t('period.day'), value: 'day', icon: <HistoryOutlined /> },
+                    { label: t('period.month'), value: 'month', icon: <ReconciliationOutlined /> }]} onReset={undefined} onResetCapture={undefined} />
               }} />
             </div></div></div>
         <div>
