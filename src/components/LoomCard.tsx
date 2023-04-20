@@ -134,7 +134,7 @@ const Component = memo((props: any) => {
       if (json.length > 0) {
         setTags(json);
         let obj = json.find((o: any) => o['tag']['name'] == 'modeCode')
-        if (obj && (modeCode?.val === undefined || dayjs(obj['updated']).isAfter(dayjs(modeCode.updated)))) {
+        if (obj && (modeCode?.val === undefined || modeCode?.val == 0 || dayjs(obj['updated']).isAfter(dayjs(modeCode.updated)))) {
           setModeCode({ val: obj['val'], updated: dayjs(obj['updated']) })
         }
         //obj && setModeCode({ val: obj['val'], updated: dayjs(obj['updated']) })
@@ -262,7 +262,7 @@ const Component = memo((props: any) => {
   }, [fullinfo?.tags])
 
   useEffect(() => {
-    if (fullinfo.modeCode && (modeCode?.val === undefined || dayjs(fullinfo.modeCode['updated']).isAfter(dayjs(modeCode.updated)))) {
+    if (fullinfo.modeCode && (modeCode?.val === undefined || modeCode?.val == 0 || dayjs(fullinfo.modeCode['updated']).isAfter(dayjs(modeCode.updated)))) {
       setModeCode({ val: fullinfo.modeCode['val'], updated: dayjs(fullinfo.modeCode['updated']) })
     }
   }, [fullinfo.modeCode]);
@@ -287,7 +287,7 @@ const Component = memo((props: any) => {
           if (updatedTags.length > 0) { setTags(updatedTags); }
         }
         if (e.lastEventId == 'modeCode') {
-          if (modeCode?.val === undefined || dayjs(json[0]['updated']).isAfter(dayjs(modeCode.updated))) {
+          if (modeCode?.val === undefined || modeCode?.val == 0 || dayjs(json[0]['updated']).isAfter(dayjs(modeCode.updated))) {
             setModeCode({ val: json[0]['val'], updated: dayjs(json[0]['updated']) })
           }
           //setLink(json[0]['link']);
@@ -488,7 +488,7 @@ const Component = memo((props: any) => {
       <Card onClick={loomDetails} title={<Space direction="horizontal" style={{ width: '100%', justifyContent: 'space-between' }}><b style={{ fontSize: '150%' }}>{props.machine?.name}</b><span style={{ color: '#FFFFFF93', fontSize: '120%' }}>{stopwatch(modeCode?.updated)}</span><span style={{ fontSize: '150%' }}>{modeCodeObj(modeCode?.val).icon}</span></Space>} loading={!link} bordered={false} size='small' style={cardStyle} headStyle={cardHeadStyle} bodyStyle={cardBodyStyle} >
         <div style={{ display: 'inline-flex', width: '100%', alignItems: 'center', justifyContent: 'center' }}>
           <div style={{ width: '30%', height: '112px' }}>
-            <Donut data={shiftDonut} selected={shiftDonutSel} text={periodInfo?.efficiency ? (Number(Number(periodInfo?.efficiency).toFixed(periodInfo?.efficiency < 10 ? 2 : 1)).toLocaleString(i18n.language) + t('tags.efficiency.eng')):'0'+ t('tags.efficiency.eng')} />
+            <Donut data={shiftDonut} selected={shiftDonutSel} text={periodInfo?.efficiency ? (Number(Number(periodInfo?.efficiency).toFixed(periodInfo?.efficiency < 10 ? 2 : 1)).toLocaleString(i18n.language) + t('tags.efficiency.eng')) : '0' + t('tags.efficiency.eng')} />
           </div>
           <Form
             labelCol={{ span: 2 }}
