@@ -257,7 +257,7 @@ const Component = memo((props: any) => {
 
   useEffect(() => {
     if (fullinfo?.tags.length > 0) {
-      const updatedTags = tags.map(obj => fullinfo?.tags.find((o: any) => o['tag']!['name'] === obj['tag']['name']) || obj);
+      const updatedTags = tags.map(obj => fullinfo?.tags.find((o: any) => (o['tag']!['name'] === obj['tag']['name']) && (dayjs(o['updated']).isAfter(dayjs(obj['updated'])))) || obj);
       if (updatedTags.length > 0) { setTags(updatedTags); }
     }
     return () => { }
@@ -271,7 +271,7 @@ const Component = memo((props: any) => {
 
   useEffect(() => {
     if (info?.tags.length > 0) {
-      const updatedTags = tags.map(obj => info?.tags.find((o: any) => o['tag']!['name'] === obj['tag']['name']) || obj);
+      const updatedTags = tags.map(obj => info?.tags.find((o: any) => (o['tag']!['name'] === obj['tag']['name']) && (dayjs(o['updated']).isAfter(dayjs(obj['updated'])))) || obj);
       if (updatedTags.length > 0) { setTags(updatedTags); }
       setLink(info?.tags.filter(x => x['link'] !== null)[0]['link']);
     }
@@ -285,7 +285,7 @@ const Component = memo((props: any) => {
       props.machine.source.addEventListener('tags', (e: any) => {
         const json = JSON.parse(e.data);
         if (json.length > 0) {
-          const updatedTags = tags.map(obj => json.find((o: any) => o['tag']!['name'] === obj['tag']['name']) || obj);
+          const updatedTags = tags.map(obj => json.find((o: any) => (o['tag']!['name'] === obj['tag']['name']) && (dayjs(o['updated']).isAfter(dayjs(obj['updated'])))) || obj);
           if (updatedTags.length > 0) { setTags(updatedTags); }
         }
         if (e.lastEventId == 'modeCode') {
