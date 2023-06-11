@@ -101,7 +101,7 @@ const UserReport: React.FC<Props> = memo(({
 
   const confirm = () => {
     const workbook = new ExcelJs.Workbook();
-    const worksheet = workbook.addWorksheet(t('panel.loom'));
+    const worksheet = workbook.addWorksheet(t('panel.weavers'));
     worksheet.properties.defaultRowHeight = 20;
     worksheet.columns =
       [
@@ -129,7 +129,7 @@ const UserReport: React.FC<Props> = memo(({
         { header: t('stop.other') + ", " + t('shift.hours'), key: 'stopsoh', },
       ];
     worksheet.duplicateRow(1, 4, true);
-    addTitle(worksheet, t('menu.monthReport') + ' ' + groups.filter(i => i.id == group)[0].name + ' ' + machines.filter(i => i.id == machine)[0].name, ((users || []).filter((item: any) => item.id == Number(user)))[0]['name'] + ' - ' + dayjs(period[0]).format('MMMM YYYY'))
+    addTitle(worksheet, t('menu.userReport') + ' ' + groups.filter(i => i.id == group)[0].name + ' ' + machines.filter(i => i.id == machine)[0].name, ((users || []).filter((item: any) => item.id == Number(user)))[0]['name'] + ' - ' + dayjs(period[0]).format('MMMM YYYY'))
     worksheet.getRow(5).font = { name: 'PTSans', family: 4, size: 9, bold: true }
     worksheet.getRow(5).eachCell((cell, number) => {
       cell.fill = {
@@ -188,7 +188,7 @@ const UserReport: React.FC<Props> = memo(({
     });
     worksheet.getRow(6 + (data || []).length).font = { name: 'PTSans', family: 4, size: 11, bold: true }
     adjustColumnWidth(worksheet);
-    saveWorkbook(workbook, t('menu.monthReport') + '_' + groups.filter(i => i.id == group)[0].name + '_' + machines.filter(i => i.id == machine)[0].name + '_' + ((users || []).filter((item: any) => item.id == Number(user)))[0]['name'] + '_' + dayjs(period[0]).format('MMMM YYYY') + '.xlsx');
+    saveWorkbook(workbook, t('menu.userReport') + '_' + groups.filter(i => i.id == group)[0].name + '_' + machines.filter(i => i.id == machine)[0].name + '_' + ((users || []).filter((item: any) => item.id == Number(user)))[0]['name'] + '_' + dayjs(period[0]).format('MMMM YYYY') + '.xlsx');
   };
 
   const columns: ColumnsType<DataType> = [
