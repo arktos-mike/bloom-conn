@@ -239,6 +239,10 @@ const MonthReport: React.FC<Props> = memo(({
     });
     worksheet.getRow(6 + (data || []).length).font = { name: 'PTSans', family: 4, size: 11, bold: true }
     adjustColumnWidth(worksheet);
+    for (let rowNum = 6; rowNum <= 6 + (data || []).length; rowNum++) {
+      const row = worksheet.getRow(rowNum);
+      row.height = 20;
+    }
     const worksheet2 = workbook.addWorksheet(t('panel.weavers'));
     worksheet2.properties.defaultRowHeight = 20;
     worksheet2.columns =
@@ -303,6 +307,10 @@ const MonthReport: React.FC<Props> = memo(({
       stopsoh: record?.stops.filter((stop: any) => stop?.other?.total)[0] && (Number(dayjs.duration((record?.stops.filter((stop: any) => stop?.other?.total))[0]?.other.dur).asHours().toFixed(1)))
     })));
     adjustColumnWidth(worksheet2);
+    for (let rowNum = 6; rowNum <= 6 + (userData || []).length; rowNum++) {
+      const row = worksheet2.getRow(rowNum);
+      row.height = 20;
+    }
     const worksheet3 = workbook.addWorksheet(t('panel.shifts'));
     worksheet3.properties.defaultRowHeight = 20;
     worksheet3.columns =
@@ -367,6 +375,10 @@ const MonthReport: React.FC<Props> = memo(({
       stopsoh: record?.stops.filter((stop: any) => stop?.other?.total)[0] && (Number(dayjs.duration((record?.stops.filter((stop: any) => stop?.other?.total))[0]?.other.dur).asHours().toFixed(1)))
     })));
     adjustColumnWidth(worksheet3);
+    for (let rowNum = 6; rowNum <= 6 + (shiftData || []).length; rowNum++) {
+      const row = worksheet3.getRow(rowNum);
+      row.height = 20;
+    }
     saveWorkbook(workbook, t('menu.monthReport') + '_' + groups.filter(i => i.id == group)[0].name + '_' + machines.filter(i => i.id == machine)[0].name + '_' + dayjs(period[0]).format('MMMM YYYY') + '.xlsx');
   };
 

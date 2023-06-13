@@ -188,6 +188,10 @@ const UserReport: React.FC<Props> = memo(({
     });
     worksheet.getRow(6 + (data || []).length).font = { name: 'PTSans', family: 4, size: 11, bold: true }
     adjustColumnWidth(worksheet);
+    for (let rowNum = 6; rowNum <= 6 + (data || []).length; rowNum++) {
+      const row = worksheet.getRow(rowNum);
+      row.height = 20;
+    }
     saveWorkbook(workbook, t('menu.userReport') + '_' + groups.filter(i => i.id == group)[0].name + '_' + machines.filter(i => i.id == machine)[0].name + '_' + ((users || []).filter((item: any) => item.id == Number(user)))[0]['name'] + '_' + dayjs(period[0]).format('MMMM YYYY') + '.xlsx');
   };
 
