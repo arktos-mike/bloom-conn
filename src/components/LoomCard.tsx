@@ -162,7 +162,7 @@ const Component = memo((props: any) => {
   const loomDetails = () => {
     Modal.destroyAll();
     props.machine.instance = modal.info({
-      title: <span style={{ fontSize: '20px' }}><b>{props.machine.name} </b>{fullinfo?.lifetime?.type && <Divider type="vertical" />}{fullinfo?.lifetime?.type && fullinfo?.lifetime?.type}{fullinfo?.lifetime?.serialno && <Divider type="vertical" />}{fullinfo?.lifetime?.serialno && ('№' + fullinfo?.lifetime?.serialno)}<Divider type="vertical" />{props.machine.ip}</span>,
+      title: <span style={{ fontSize: '20px' }}><b>{props.machine.name} </b>{fullinfo?.lifetime?.type && <Divider type="vertical" />}{fullinfo?.lifetime?.type && fullinfo?.lifetime?.type}{fullinfo?.lifetime?.serialno && <Divider type="vertical" />}{fullinfo?.lifetime?.serialno && ('№' + fullinfo?.lifetime?.serialno)}<Divider type="vertical" /><a href={"http://"+props.machine.ip+":8080"} target="_blank">{props.machine.ip}</a></span>,
       centered: true,
       maskClosable: true,
       width: 600,
