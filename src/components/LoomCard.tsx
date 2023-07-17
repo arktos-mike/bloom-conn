@@ -233,10 +233,10 @@ const Component = memo((props: any) => {
               <span style={{ fontSize: '18px' }}>{fullinfo?.lifetime?.mfgdate && dayjs(fullinfo?.lifetime?.mfgdate).format("LL")}</span>
             </Form.Item>
             <Form.Item label={<SyncOutlined style={{ color: '#1890ff', fontSize: '130%' }} />} >
-              <span style={{ fontSize: '18px' }}>{fullinfo?.lifetime?.picks > 0 && ((fullinfo?.lifetime?.picks + Number(getTagVal('picksLastRun'))) + ' ' + t('tags.planClothDensity.eng').split('/')[0])}</span>
+              <span style={{ fontSize: '18px' }}>{fullinfo?.lifetime?.picks > 0 && ((fullinfo?.lifetime?.picks + localeParseFloat(getTagVal('picksLastRun'))).toFixed(0).toString() + ' ' + t('tags.planClothDensity.eng').split('/')[0])}</span>
             </Form.Item>
             <Form.Item label={<FabricPieceIcon style={{ color: '#1890ff', fontSize: '130%' }} />} >
-              <span style={{ fontSize: '18px' }}>{fullinfo?.lifetime?.cloth > 0 && (Number(Number(fullinfo?.lifetime?.cloth + Number(getTagVal('picksLastRun')) / (100 * Number(getTagVal('planClothDensity')))).toFixed(2).toString()).toLocaleString(i18n.language) + ' ' + t('tags.planClothDensity.eng')?.split('/')[1]?.slice(-1))}</span>
+              <span style={{ fontSize: '18px' }}>{fullinfo?.lifetime?.cloth > 0 && (Number(Number(fullinfo?.lifetime?.cloth + localeParseFloat(getTagVal('picksLastRun')) / (100 * localeParseFloat(getTagVal('planClothDensity')))).toFixed(2).toString()).toLocaleString(i18n.language) + ' ' + t('tags.planClothDensity.eng')?.split('/')[1]?.slice(-1))}</span>
             </Form.Item>
             <Form.Item label={<HistoryOutlined style={{ color: '#1890ff', fontSize: '130%' }} />} >
               <span style={{ fontSize: '18px' }}>{duration2text((modeCode?.val == 1) ? dayjs.duration(fullinfo?.lifetime?.motor).add(dayjs().diff(modeCode?.updated)) : dayjs.duration(fullinfo?.lifetime?.motor))}</span>
@@ -470,10 +470,10 @@ const Component = memo((props: any) => {
                 <span style={{ fontSize: '18px' }}>{fullinfo?.lifetime?.mfgdate && dayjs(fullinfo?.lifetime?.mfgdate).format("LL")}</span>
               </Form.Item>
               <Form.Item label={<SyncOutlined style={{ color: '#1890ff', fontSize: '130%' }} />} >
-                <span style={{ fontSize: '18px' }}>{fullinfo?.lifetime?.picks > 0 && ((fullinfo?.lifetime?.picks + ((modeCode?.val == 1) ? Number(getTagVal('picksLastRun')) : 0)) + ' ' + t('tags.planClothDensity.eng').split('/')[0])}</span>
+                <span style={{ fontSize: '18px' }}>{fullinfo?.lifetime?.picks > 0 && ((fullinfo?.lifetime?.picks + ((modeCode?.val == 1) ? localeParseFloat(getTagVal('picksLastRun')) : 0)).toFixed(0).toString() + ' ' + t('tags.planClothDensity.eng').split('/')[0])}</span>
               </Form.Item>
               <Form.Item label={<FabricPieceIcon style={{ color: '#1890ff', fontSize: '130%' }} />} >
-                <span style={{ fontSize: '18px' }}>{fullinfo?.lifetime?.cloth > 0 && (Number(Number(fullinfo?.lifetime?.cloth + Number(getTagVal('picksLastRun')) / (100 * Number(getTagVal('planClothDensity')))).toFixed(2).toString()).toLocaleString(i18n.language) + ' ' + t('tags.planClothDensity.eng')?.split('/')[1]?.slice(-1))}</span>
+                <span style={{ fontSize: '18px' }}>{fullinfo?.lifetime?.cloth > 0 && (Number(Number(fullinfo?.lifetime?.cloth + localeParseFloat(getTagVal('picksLastRun')) / (100 * localeParseFloat(getTagVal('planClothDensity')))).toFixed(2).toString()).toLocaleString(i18n.language) + ' ' + t('tags.planClothDensity.eng')?.split('/')[1]?.slice(-1))}</span>
               </Form.Item>
               <Form.Item label={<HistoryOutlined style={{ color: '#1890ff', fontSize: '130%' }} />} >
                 <span style={{ fontSize: '18px' }}>{duration2text((modeCode?.val == 1) ? dayjs.duration(fullinfo?.lifetime?.motor).add(dayjs().diff(modeCode?.updated)) : dayjs.duration(fullinfo?.lifetime?.motor))}</span>
