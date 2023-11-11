@@ -30,11 +30,11 @@ const Component = (props: any) => {
 
   if (props.userRights && (props.token ? props.userRights.includes(JSON.parse(Buffer.from(props.token.split('.')[1], 'base64').toString()).role) ? false : true : true)) {
     return (
-      <Button type={props.type ? props.type : "primary"} shape={props.shape} danger={props.danger} style={props.style} onClick={() => { openNotificationWithIcon('error', t('notifications.rightserror'), 2, '', { backgroundColor: '#fff2f0', border: '2px solid #ffccc7' }); }} icon={props.icon} size='large' >{t(props.text)}</Button>
+      <Button disabled={props.disabled} type={props.type ? props.type : "primary"} shape={props.shape} danger={props.danger} style={props.style} onClick={() => { openNotificationWithIcon('error', t('notifications.rightserror'), 2, '', { backgroundColor: '#fff2f0', border: '2px solid #ffccc7' }); }} icon={props.icon} size='large' >{t(props.text)}</Button>
     );
   }
   return (
-    <Button type={props.type ? props.type : "primary"} shape={props.shape} danger={props.danger} style={props.style} onMouseDown={props.onPress} onTouchStart={props.onPress} onMouseUp={props.onRelease} onMouseLeave={props.onRelease} onTouchEnd={props.onRelease} onClick={() => { props.confirm ? confirm(props.onClick) : props.onClick && props.onClick() }} icon={props.icon} htmlType={props.htmlType} size='large' >{t(props.text)}</Button>
+    <Button disabled={props.disabled} type={props.type ? props.type : "primary"} shape={props.shape} danger={props.danger} style={props.style} onMouseDown={props.onPress} onTouchStart={props.onPress} onMouseUp={props.onRelease} onMouseLeave={props.onRelease} onTouchEnd={props.onRelease} onClick={() => { props.confirm ? confirm(props.onClick) : props.onClick && props.onClick() }} icon={props.icon} htmlType={props.htmlType} size='large' >{t(props.text)}</Button>
   );
 }
 export default Component;

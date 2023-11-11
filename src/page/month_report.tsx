@@ -887,7 +887,7 @@ const MonthReport: React.FC<Props> = memo(({
           } />
         <h1 style={{ margin: 10 }}>{t('log.select')}</h1>
         <DatePicker style={{ flexGrow: 1 }} picker="month" format='MMMM YYYY' defaultValue={dayjs()} onChange={(e: any) => { setPeriod([e ? e?.startOf('month') : dayjs().startOf('month'), e ? e?.endOf('month') : dayjs()]) }} />
-        <Button shape="circle" icon={<SaveOutlined style={{fontSize:'130%'}}/>} size="large" type="primary" style={{ margin: 10 }} onClick={confirm} ></Button>
+        <Button shape="circle" icon={<SaveOutlined style={{fontSize:'130%'}}/>} size="large" type="primary" style={{ margin: 10 }} onClick={confirm} disabled={loading}></Button>
       </div>
       <Tabs size='small' type='card' animated={{ inkBar: true, tabPane: true }} items={items} />
     </div>
